@@ -1,0 +1,326 @@
+2026-04-07 15:25:49.264976: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 15:25:49.266486: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+2026-04-07 15:25:49.267003: Running on_exit tasks
+2026-04-07 15:25:49.267283: wfastcgi.py 3.0.0 closed
+2026-04-07 16:03:34.757143: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 16:03:34.758598: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+2026-04-07 16:03:34.758937: Running on_exit tasks
+2026-04-07 16:03:34.759376: wfastcgi.py 3.0.0 closed
+2026-04-07 16:03:36.803804: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 16:03:36.805039: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+2026-04-07 16:03:36.805356: Running on_exit tasks
+2026-04-07 16:03:36.805826: wfastcgi.py 3.0.0 closed
+2026-04-07 16:03:54.017433: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 16:03:54.018706: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+2026-04-07 16:03:54.019052: Running on_exit tasks
+2026-04-07 16:03:54.019382: wfastcgi.py 3.0.0 closed
+2026-04-07 16:08:29.105248: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 16:08:29.106830: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 616, in get_wsgi_handler
+    raise ValueError('"%s" could not be imported%s' % (handler_name, last_tb))
+ValueError: "app.app" could not be imported: Traceback (most recent call last):
+  File "C:\websites\env\Lib\site-packages\wfastcgi.py", line 600, in get_wsgi_handler
+    handler = __import__(module_name, fromlist=[name_list[0][0]])
+  File "C:\websites\IPL_API\app\__init__.py", line 2, in <module>
+    from flask_cors import CORS
+ModuleNotFoundError: No module named 'flask_cors'
+
+2026-04-07 16:08:29.107189: Running on_exit tasks
+2026-04-07 16:08:29.107600: wfastcgi.py 3.0.0 closed
+2026-04-07 16:29:48.562640: Error occurred while reading WSGI handler:
+
+Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 603, in get_wsgi_handler
+    handler = getattr(handler, name)
+AttributeError: module 'app' has no attribute 'app'
+
+
+StdOut: 
+
+StdErr: 
+2026-04-07 16:29:48.564535: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 791, in main
+    env, handler = read_wsgi_handler(response.physical_path)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 633, in read_wsgi_handler
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 603, in get_wsgi_handler
+    handler = getattr(handler, name)
+AttributeError: module 'app' has no attribute 'app'
+2026-04-07 16:29:48.564976: Running on_exit tasks
+2026-04-07 16:29:48.565472: wfastcgi.py 3.0.0 closed
+2026-04-07 16:34:35.122205: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-07 16:34:35.122939: wfastcgi.py 3.0.0 initialized
+2026-04-07 16:39:49.604459: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-07 16:39:49.604962: Running on_exit tasks
+2026-04-07 16:39:49.605325: wfastcgi.py 3.0.0 closed
+2026-04-07 16:57:39.472846: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-07 16:57:39.473452: wfastcgi.py 3.0.0 initialized
+2026-04-07 17:03:29.027998: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-07 17:03:29.028551: Running on_exit tasks
+2026-04-07 17:03:29.028922: wfastcgi.py 3.0.0 closed
+2026-04-07 17:20:07.275068: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-07 17:20:07.276052: wfastcgi.py 3.0.0 initialized
+2026-04-07 17:25:21.627221: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-07 17:25:21.627568: Running on_exit tasks
+2026-04-07 17:25:21.627936: wfastcgi.py 3.0.0 closed
+2026-04-08 02:40:02.454041: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 02:40:02.454736: wfastcgi.py 3.0.0 initialized
+2026-04-08 02:45:16.953283: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 02:45:16.953756: Running on_exit tasks
+2026-04-08 02:45:16.954129: wfastcgi.py 3.0.0 closed
+2026-04-08 02:50:37.946598: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 02:50:37.947162: wfastcgi.py 3.0.0 initialized
+2026-04-08 02:55:52.522680: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 02:55:52.523121: Running on_exit tasks
+2026-04-08 02:55:52.523415: wfastcgi.py 3.0.0 closed
+2026-04-08 06:12:28.733213: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 06:12:28.733892: wfastcgi.py 3.0.0 initialized
+2026-04-08 06:21:13.257429: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 06:21:13.257915: Running on_exit tasks
+2026-04-08 06:21:13.258289: wfastcgi.py 3.0.0 closed
+2026-04-08 07:50:18.203256: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 07:50:18.203937: wfastcgi.py 3.0.0 initialized
+2026-04-08 08:10:07.765047: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 08:10:07.765572: Running on_exit tasks
+2026-04-08 08:10:07.765925: wfastcgi.py 3.0.0 closed
+2026-04-08 08:20:25.812487: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 08:20:25.813289: wfastcgi.py 3.0.0 initialized
+2026-04-08 08:27:25.377603: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 08:27:25.378104: Running on_exit tasks
+2026-04-08 08:27:25.378477: wfastcgi.py 3.0.0 closed
+2026-04-08 09:26:53.551949: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 09:26:53.552553: wfastcgi.py 3.0.0 initialized
+2026-04-08 09:39:08.120487: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 09:39:08.121006: Running on_exit tasks
+2026-04-08 09:39:08.121373: wfastcgi.py 3.0.0 closed
+2026-04-08 09:39:24.460837: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 09:39:24.461455: wfastcgi.py 3.0.0 initialized
+2026-04-08 09:45:15.174801: wfastcgi.py exiting because app\routes\auth.py has changed, matching .*((\.py)|(\.config))$
+2026-04-08 09:45:15.175474: Running on_exit tasks
+2026-04-08 09:54:41.564096: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-04-08 09:54:41.564752: wfastcgi.py 3.0.0 initialized
+2026-04-08 10:04:36.108826: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-04-08 10:04:36.109449: Running on_exit tasks
+2026-04-08 10:04:36.109789: wfastcgi.py 3.0.0 closed
