@@ -37,24 +37,27 @@ def current_user():
     return fetch_one(
         f'''
         SELECT
-            "USUARIOID",
-            "NOMBRE",
-            "USUARIO",
-            "PERFILID",
-            "ACTIVO",
-            "SUCURSAL"
-        FROM "{SCHEMA}"."USUARIOS"
-        WHERE "USUARIOID" = ?
+            U."USUARIOID",
+            U."SOCIOID",
+            U."PERFILID",
+            U."DEPAID",
+            U."JEFEID",
+            U."NOMBRE",
+            U."USUARIO",
+            U."PWD",
+            U."SUCURSAL",
+            U."ACTIVO",
+            U."NUMERO_EMPLEADO",
+            U."TIPO_EMPLEADO",
+            U."TIPO_EMPLEADO_ID"
+        FROM "{SCHEMA}"."USUARIOS" U
+        WHERE U."USUARIOID" = ?
         ''',
         [user_id]
     )
 
 
 def validate_active_session():
-    """
-    Devuelve (True, None) si la sesión es válida
-    o (False, response) si debe cortar la ejecución.
-    """
     if not require_login():
         return False, error_response("No autenticado", 401)
 
@@ -70,53 +73,57 @@ def validate_active_session():
     return True, None
 
 
-def user_has_permission(permission_code):
+def user_has_permission(module_code: str, action_code: str):
     user_id = current_user_id()
     if not user_id:
         return False
 
-    # Permisos por perfil
-    profile_perm = fetch_one(
-        f'''
-        SELECT 1
-        FROM "{SCHEMA}"."USUARIOS" U
-        INNER JOIN "{SCHEMA}"."PERFILES_PERMISOS" PP
-            ON U."PERFILID" = PP."PERFILID"
-        INNER JOIN "{SCHEMA}"."PERMISOS" P
-            ON PP."PERMISOID" = P."PERMISOID"
-        WHERE U."USUARIOID" = ?
-          AND P."CODIGO" = ?
-          AND P."ACTIVO" = 1
-        ''',
-        [user_id, permission_code]
-    )
-
-    if profile_perm:
-        return True
-
-    # Permisos directos por usuario
+    # 🔥 1. PRIORIDAD: PERMISO POR USUARIO
     user_perm = fetch_one(
         f'''
-        SELECT 1
-        FROM "{SCHEMA}"."USUARIOS_PERMISOS" UP
-        INNER JOIN "{SCHEMA}"."PERMISOS" P
-            ON UP."PERMISOID" = P."PERMISOID"
-        WHERE UP."USUARIOID" = ?
-          AND P."CODIGO" = ?
-          AND P."ACTIVO" = 1
+        SELECT PU."PERMITIDO"
+        FROM "{SCHEMA}"."PERMISOS_USUARIO" PU
+        INNER JOIN "{SCHEMA}"."MODULOS" M ON PU."MODULOID" = M."MODULOID"
+        INNER JOIN "{SCHEMA}"."ACCIONES" A ON PU."ACCIONID" = A."ACCIONID"
+        WHERE PU."USUARIOID" = ?
+          AND PU."ACTIVO" = 1
+          AND UPPER(M."CLAVE") = UPPER(?)
+          AND UPPER(A."CLAVE") = UPPER(?)
         ''',
-        [user_id, permission_code]
+        [user_id, module_code, action_code]
     )
 
-    return user_perm is not None
+    if user_perm is not None:
+        return int(user_perm.get("PERMITIDO", 0)) == 1
+
+    # 🔹 2. SI NO EXISTE → USAR PERFIL
+    profile_perm = fetch_one(
+        f'''
+        SELECT PP."PERMITIDO"
+        FROM "{SCHEMA}"."USUARIOS" U
+        INNER JOIN "{SCHEMA}"."PERMISOS_PERFIL" PP ON U."PERFILID" = PP."PERFILID"
+        INNER JOIN "{SCHEMA}"."MODULOS" M ON PP."MODULOID" = M."MODULOID"
+        INNER JOIN "{SCHEMA}"."ACCIONES" A ON PP."ACCIONID" = A."ACCIONID"
+        WHERE U."USUARIOID" = ?
+          AND PP."ACTIVO" = 1
+          AND UPPER(M."CLAVE") = UPPER(?)
+          AND UPPER(A."CLAVE") = UPPER(?)
+        ''',
+        [user_id, module_code, action_code]
+    )
+
+    if profile_perm is not None:
+        return int(profile_perm.get("PERMITIDO", 0)) == 1
+
+    return False
 
 
-def require_permission(permission_code):
+def require_permission(module_code, action_code):
     valid, response = validate_active_session()
     if not valid:
         return False, response
 
-    if not user_has_permission(permission_code):
+    if not user_has_permission(module_code, action_code):
         return False, error_response("No autorizado", 403)
 
     return True, None
