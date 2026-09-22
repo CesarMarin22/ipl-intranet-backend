@@ -1,7 +1,9 @@
 import os
 import csv
+import sqlite3
 import unicodedata
 from datetime import datetime
+from urllib.parse import quote
 
 import requests
 from flask import Blueprint, request, session
@@ -290,6 +292,137 @@ def buscar_cssrs():
         return error_response(f"Error al consultar CSSR SAP: {str(e)}", 500)
 
 
+@ordenes_trabajo_bp.route("/flash-reports", methods=["GET"])
+def listar_flash_reports():
+    """Lista todas las OT de seguridad (Flash Reports) del usuario"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    allowed, response = require_permission("OT_SEGURIDAD", "VER")
+    if not allowed:
+        return response
+
+    username = session.get("username", "")
+    perfil = session.get("perfil")
+    page = int(request.args.get("page", 1))
+    per_page = 10
+
+    try:
+        skip = (page - 1) * per_page
+        top = per_page
+
+        # Filtro base: OT del usuario actual
+        filtro = f"U_CreateUser eq '{username}'"
+
+        # Si tiene perfil de Flash Report, agregar filtros adicionales
+        PERFIL_FILTROS_FLASH = {
+            4: {"call_type_id": 24, "nombre_problema": "Seguridad"},
+            6: {"call_type_id": 28, "nombre_problema": "Operación"},
+            7: {"call_type_id": 27, "nombre_problema": "Vehículos"},
+        }
+
+        info_perfil = PERFIL_FILTROS_FLASH.get(perfil)
+        if info_perfil:
+            condicion_extra = f"CallType eq {info_perfil['call_type_id']}"
+            filtro = f"({filtro}) or (U_Severidad ne null and ({condicion_extra}))"
+
+        filtro_codificado = quote(filtro)
+
+        data = sap_get(
+            f"ServiceCalls?"
+            f"$filter={filtro_codificado}"
+            f"&$orderby=AssignedDate desc"
+            f"&$skip={skip}&$top={top}"
+            f"&$select=DocNum,CustomerRefNo,CustomerName,ManufacturerSerialNum,AssignedDate,Series,U_Severidad,U_CreateUser"
+            f"&$inlinecount=allpages"
+        )
+
+        total_registros = int(data.get("odata.count", 0))
+        llamadas = data.get("value", [])
+
+        # Formatear fechas
+        for llamada in llamadas:
+            fecha_iso = llamada.get("AssignedDate", "")
+            try:
+                fecha_obj = datetime.strptime(fecha_iso, "%Y-%m-%dT%H:%M:%SZ")
+                llamada["FechaFormateada"] = fecha_obj.strftime("%d/%m/%Y")
+            except Exception:
+                llamada["FechaFormateada"] = fecha_iso
+
+        total_paginas = ((total_registros + per_page - 1) // per_page) if total_registros else 1
+
+        return ok_response(
+            {
+                "llamadas": llamadas,
+                "page": page,
+                "per_page": per_page,
+                "total_registros": total_registros,
+                "total_paginas": total_paginas,
+            }
+        )
+
+    except Exception as e:
+        return error_response(f"Error al listar Flash Reports: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/audi", methods=["GET"])
+def listar_ot_audi():
+    """Lista todas las OT de Audi (Series = 374, CustomerName = AUDI MEXICO)"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    allowed, response = require_permission("OT_AUDI", "VER")
+    if not allowed:
+        return response
+
+    page = int(request.args.get("page", 1))
+    per_page = 10
+
+    try:
+        skip = (page - 1) * per_page
+        top = per_page
+
+        filtro = "Series eq 374 and CustomerName eq 'AUDI MEXICO'"
+        filtro_codificado = quote(filtro)
+
+        data = sap_get(
+            f"ServiceCalls?"
+            f"$filter={filtro_codificado}"
+            f"&$orderby=AssignedDate desc"
+            f"&$skip={skip}&$top={top}"
+            f"&$inlinecount=allpages"
+        )
+
+        total_registros = int(data.get("odata.count", 0))
+        ordenes = data.get("value", [])
+
+        # Formatear fechas
+        for orden in ordenes:
+            fecha_iso = orden.get("AssignedDate", "")
+            try:
+                fecha_obj = datetime.strptime(fecha_iso, "%Y-%m-%dT%H:%M:%SZ")
+                orden["FechaFormateada"] = fecha_obj.strftime("%d/%m/%Y")
+            except Exception:
+                orden["FechaFormateada"] = fecha_iso
+
+        total_paginas = ((total_registros + per_page - 1) // per_page) if total_registros else 1
+
+        return ok_response(
+            {
+                "ordenes": ordenes,
+                "page": page,
+                "per_page": per_page,
+                "total_registros": total_registros,
+                "total_paginas": total_paginas,
+            }
+        )
+
+    except Exception as e:
+        return error_response(f"Error al listar OT Audi: {str(e)}", 500)
+
+
 @ordenes_trabajo_bp.route("/tipos-problema", methods=["GET"])
 def tipos_problema():
     valid, response = validate_active_session()
@@ -495,6 +628,26 @@ SUCURSALES_SAP = {
     374: "PUE",
 }
 
+# Severidad para Flash Reports (OT Seguridad)
+SEVERIDAD_INFO = {
+    "Menor": ("#00b050", "#ffffff"),
+    "Moderada": ("#ffff00", "#111111"),
+    "Critica": ("#ffc000", "#111111"),
+    "Fatal": ("#ff0000", "#ffffff"),
+    "CriticaO": ("#ff0000", "#ffffff"),
+    "Alto": ("#ffc000", "#111111"),
+    "ModeradaO": ("#ffff00", "#111111"),
+    "Bajo": ("#00b050", "#ffffff"),
+    "CriticaV": ("#ff0000", "#ffffff"),
+    "ModeradaV": ("#ffc000", "#111111"),
+    "MenorV": ("#00b050", "#ffffff"),
+}
+
+# Base de datos de seguimiento para Flash Reports
+SEGUIMIENTO_DB_PATH = os.getenv(
+    "SEGUIMIENTO_DB_PATH", r"C:\Publish\addonServicioweb\seguimiento_flash.db"
+)
+
 
 def obtener_nombre_sucursal(series_id):
     if not series_id:
@@ -504,6 +657,57 @@ def obtener_nombre_sucursal(series_id):
         return SUCURSALES_SAP.get(int(series_id), f"Serie {series_id}")
     except Exception:
         return f"Serie {series_id}"
+
+
+def obtener_nombre_tipo_problema(problem_type_id):
+    """Obtiene el nombre del tipo de problema desde SAP"""
+    if not problem_type_id:
+        return "N/A"
+
+    try:
+        data = sap_get(
+            f"ServiceCallProblemTypes?$filter=ProblemTypeID eq {problem_type_id}"
+        )
+        rows = data.get("value", [])
+        if rows:
+            return rows[0].get("Name")
+    except Exception:
+        pass
+
+    return f"Problema {problem_type_id}"
+
+
+def perfil_puede_dar_seguimiento(perfil, call_type_id):
+    """Valida si el perfil del usuario puede dar seguimiento a Flash Reports"""
+    PERFIL_FILTROS_FLASH = {
+        4: {"call_type_id": 24},  # Seguridad
+        6: {"call_type_id": 28},  # Calidad
+        7: {"call_type_id": 27},  # Legal
+    }
+    if perfil == 1:  # Admin puede todo
+        return True
+    info = PERFIL_FILTROS_FLASH.get(perfil)
+    return bool(info) and info.get("call_type_id") == call_type_id
+
+
+def obtener_conexion_seguimiento():
+    """Obtiene conexión a la base de datos de seguimiento de Flash Reports"""
+    os.makedirs(os.path.dirname(SEGUIMIENTO_DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(SEGUIMIENTO_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS seguimiento (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            docnum INTEGER NOT NULL,
+            estatus TEXT NOT NULL,
+            responsable TEXT,
+            fecha_compromiso TEXT,
+            comentario TEXT,
+            creado_por TEXT,
+            creado_en TEXT NOT NULL
+        )
+    """)
+    return conn
 
 
 def obtener_nombre_tipo_orden(call_type_id):
@@ -745,9 +949,11 @@ def ver_orden_trabajo(docnum):
 
         call_type_id = ot.get("CallType")
         series_id = ot.get("Series")
+        severidad_codigo = ot.get("U_Severidad")
 
         ot["CallTypeName"] = obtener_nombre_tipo_orden(call_type_id)
         ot["SucursalName"] = obtener_nombre_sucursal(series_id)
+        ot["ProblemTypeName"] = obtener_nombre_tipo_problema(ot.get("ProblemType"))
 
         ot["RealizoTrabajoNombre"] = obtener_nombre_empleado(
             ot.get("TechnicianCode")
@@ -759,6 +965,16 @@ def ver_orden_trabajo(docnum):
             ot.get("U_Tecnico4")
         )
 
+        # Información de severidad (para Flash Reports)
+        if severidad_codigo:
+            color_fondo, color_texto = SEVERIDAD_INFO.get(
+                severidad_codigo, ("#dddddd", "#111111")
+            )
+            ot["SeveridadEtiqueta"] = severidad_codigo
+            ot["SeveridadColorFondo"] = color_fondo
+            ot["SeveridadColorTexto"] = color_texto
+
+        # Determinar tipo de OT
         tipo_vista = "normal"
 
         if ot.get("U_Severidad"):
@@ -766,13 +982,110 @@ def ver_orden_trabajo(docnum):
         elif ot.get("CustomerName") == "AUDI MEXICO" and int(series_id or 0) == 374:
             tipo_vista = "audi"
 
+        # Validar si puede dar seguimiento (solo para Flash Reports)
+        puede_seguimiento = (
+            tipo_vista == "seguridad"
+            and perfil_puede_dar_seguimiento(session.get("perfil"), call_type_id)
+        )
+
         return ok_response(
             {
                 "tipo_vista": tipo_vista,
                 "ot": ot,
+                "puede_seguimiento": puede_seguimiento,
             }
         )
 
     except Exception as e:
         return error_response(f"Error al consultar OT SAP: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/<int:docnum>/seguimiento", methods=["GET"])
+def obtener_seguimiento(docnum):
+    """Obtiene el historial de seguimiento de un Flash Report"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    try:
+        conn = obtener_conexion_seguimiento()
+        historial = conn.execute(
+            "SELECT * FROM seguimiento WHERE docnum = ? ORDER BY creado_en DESC",
+            (docnum,)
+        ).fetchall()
+        conn.close()
+
+        ya_cerrado = any(row["estatus"] == "Cerrado" for row in historial)
+
+        return ok_response(
+            {
+                "docnum": docnum,
+                "historial": [dict(row) for row in historial],
+                "ya_cerrado": ya_cerrado,
+            }
+        )
+
+    except Exception as e:
+        return error_response(f"Error al obtener seguimiento: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/<int:docnum>/seguimiento", methods=["POST"])
+def guardar_seguimiento(docnum):
+    """Guarda un nuevo registro de seguimiento para un Flash Report"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    allowed, response = require_permission("OT_SEGURIDAD", "CREAR")
+    if not allowed:
+        return response
+
+    datos = request.get_json(silent=True) or {}
+    estatus = datos.get("estatus", "").strip()
+    responsable = datos.get("responsable", "").strip()
+    fecha_compromiso = datos.get("fecha_compromiso", "").strip()
+    comentario = datos.get("comentario", "").strip()
+
+    if not estatus:
+        return error_response("El estatus es obligatorio", 400)
+
+    try:
+        # Obtener la OT desde SAP para validaciones
+        ot_data = sap_get(f"ServiceCalls?$filter=DocNum eq {docnum}")
+        ot = ot_data.get("value", [{}])[0]
+
+        if not ot:
+            return error_response("No se encontró la OT en SAP", 404)
+
+        # Validar permisos según el CallType
+        call_type_id = ot.get("CallType")
+        if not perfil_puede_dar_seguimiento(session.get("perfil"), call_type_id):
+            return error_response("No tiene permiso para dar seguimiento a esta OT", 403)
+
+        # Guardar en base de datos
+        creado_por = session.get("username", "Sistema")
+        creado_en = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        conn = obtener_conexion_seguimiento()
+        conn.execute(
+            """INSERT INTO seguimiento
+               (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en),
+        )
+        conn.commit()
+        conn.close()
+
+        return ok_response(
+            {
+                "docnum": docnum,
+                "estatus": estatus,
+                "creado_en": creado_en,
+            },
+            "Seguimiento guardado correctamente",
+            201,
+        )
+
+    except Exception as e:
+        return error_response(f"Error al guardar seguimiento: {str(e)}", 500)
     
