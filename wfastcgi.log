@@ -84724,3 +84724,357 @@ OSError: [Errno 22] Invalid argument
 2026-09-22 12:29:51.454815: wfastcgi.py 3.0.0 closed
 2026-09-22 12:38:40.121986: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
 2026-09-22 12:38:40.123078: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:00:15.547855: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:00:15.548710: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:02:38.681372: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:02:38.682448: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:07:31.460700: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:07:31.461686: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:12:44.530628: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:12:44.531410: Running on_exit tasks
+2026-09-22 13:12:44.531912: wfastcgi.py 3.0.0 closed
+2026-09-22 13:13:04.316966: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:13:04.317560: Running on_exit tasks
+2026-09-22 13:13:04.317901: wfastcgi.py 3.0.0 closed
+2026-09-22 13:17:50.482213: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:17:50.483033: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:17:50.583475: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:17:50.584421: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:23:02.649023: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:23:02.649556: Running on_exit tasks
+2026-09-22 13:23:02.650242: wfastcgi.py 3.0.0 closed
+2026-09-22 13:23:04.296570: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:23:04.297124: Running on_exit tasks
+2026-09-22 13:23:04.297682: wfastcgi.py 3.0.0 closed
+2026-09-22 13:23:39.413129: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:23:39.414429: Running on_exit tasks
+2026-09-22 13:23:39.415127: wfastcgi.py 3.0.0 closed
+2026-09-22 13:34:00.059857: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:34:00.060827: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:40:07.428202: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:40:07.429042: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:40:07.576534: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:40:07.577783: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:40:31.011285: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 13:40:31.012186: wfastcgi.py 3.0.0 initialized
+2026-09-22 13:56:43.997361: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:56:43.998260: Running on_exit tasks
+2026-09-22 13:56:43.998758: wfastcgi.py 3.0.0 closed
+2026-09-22 13:57:00.942906: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 13:57:00.943656: Running on_exit tasks
+2026-09-22 13:57:00.944046: wfastcgi.py 3.0.0 closed
+2026-09-22 14:00:19.824296: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:00:19.824959: Running on_exit tasks
+2026-09-22 14:00:19.825402: wfastcgi.py 3.0.0 closed
+2026-09-22 14:02:55.766076: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:02:55.767148: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:02:55.864023: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:02:55.865057: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:08:06.044490: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:08:06.045087: Running on_exit tasks
+2026-09-22 14:08:06.045550: wfastcgi.py 3.0.0 closed
+2026-09-22 14:08:09.445854: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:08:09.446405: Running on_exit tasks
+2026-09-22 14:08:09.446864: wfastcgi.py 3.0.0 closed
+2026-09-22 14:08:44.530979: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:08:44.531566: Running on_exit tasks
+2026-09-22 14:08:44.532055: wfastcgi.py 3.0.0 closed
+2026-09-22 14:12:20.645263: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:12:20.646325: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:27:29.628926: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:27:29.629546: Running on_exit tasks
+2026-09-22 14:27:29.630052: wfastcgi.py 3.0.0 closed
+2026-09-22 14:37:19.640933: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:37:19.642882: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:37:21.972653: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:37:21.976285: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:42:32.856553: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:42:32.857067: Running on_exit tasks
+2026-09-22 14:42:32.857453: wfastcgi.py 3.0.0 closed
+2026-09-22 14:43:10.028138: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 14:43:10.028946: Running on_exit tasks
+2026-09-22 14:43:10.030244: wfastcgi.py 3.0.0 closed
+2026-09-22 14:50:01.389497: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:50:01.390577: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:54:59.417015: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:54:59.422403: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:54:59.514573: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:54:59.515802: wfastcgi.py 3.0.0 initialized
+2026-09-22 14:54:59.721531: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 14:54:59.723066: wfastcgi.py 3.0.0 initialized
+2026-09-22 15:00:12.599073: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:00:12.599691: Running on_exit tasks
+2026-09-22 15:00:12.600382: wfastcgi.py 3.0.0 closed
+2026-09-22 15:00:29.593704: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:00:29.594494: Running on_exit tasks
+2026-09-22 15:00:29.595079: wfastcgi.py 3.0.0 closed
+2026-09-22 15:00:47.600069: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:00:47.600692: Running on_exit tasks
+2026-09-22 15:00:47.601180: wfastcgi.py 3.0.0 closed
+2026-09-22 15:06:02.563935: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:06:02.564495: Running on_exit tasks
+2026-09-22 15:06:02.564988: wfastcgi.py 3.0.0 closed
+2026-09-22 15:14:34.679300: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 15:14:34.681421: wfastcgi.py 3.0.0 initialized
+2026-09-22 15:19:47.787060: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:19:47.787754: Running on_exit tasks
+2026-09-22 15:19:47.788235: wfastcgi.py 3.0.0 closed
+2026-09-22 15:38:34.937356: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 15:38:34.938446: wfastcgi.py 3.0.0 initialized
+2026-09-22 15:43:48.299871: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:43:48.300734: Running on_exit tasks
+2026-09-22 15:43:48.301283: wfastcgi.py 3.0.0 closed
+2026-09-22 15:51:05.680439: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 15:51:05.681388: wfastcgi.py 3.0.0 initialized
+2026-09-22 15:56:54.055321: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 15:56:54.055774: Running on_exit tasks
+2026-09-22 15:56:54.056072: wfastcgi.py 3.0.0 closed
+2026-09-22 16:13:47.469312: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:13:47.470291: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:13:49.919907: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:13:49.920768: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:13:50.729272: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:13:50.731617: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:13:50.908985: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:13:50.910532: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:13:51.040671: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:13:51.056563: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:19:01.291725: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:19:01.292465: Running on_exit tasks
+2026-09-22 16:19:01.293012: wfastcgi.py 3.0.0 closed
+2026-09-22 16:20:13.060343: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:20:13.061000: Running on_exit tasks
+2026-09-22 16:20:13.061384: wfastcgi.py 3.0.0 closed
+2026-09-22 16:20:13.163978: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:20:13.164475: Running on_exit tasks
+2026-09-22 16:20:13.164836: wfastcgi.py 3.0.0 closed
+2026-09-22 16:21:04.459848: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:21:04.460360: Running on_exit tasks
+wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:21:04.461676: Running on_exit tasks
+2026-09-22 16:21:04.462123: wfastcgi.py 3.0.0 closed
+2026-09-22 16:21:04.469973: wfastcgi.py 3.0.0 closed
+2026-09-22 16:22:18.931333: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:22:18.932419: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:22:21.402859: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:22:21.403956: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:22:22.524260: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:22:22.525409: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:26:16.270778: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:26:16.273127: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:32:11.949456: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:32:11.950635: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:37:18.549927: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:37:18.551902: Running on_exit tasks
+2026-09-22 16:37:18.552366: wfastcgi.py 3.0.0 closed
+2026-09-22 16:37:24.980165: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:37:24.980758: Running on_exit tasks
+2026-09-22 16:37:24.985337: wfastcgi.py 3.0.0 closed
+2026-09-22 16:37:27.341955: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:37:27.342529: Running on_exit tasks
+2026-09-22 16:37:27.343010: wfastcgi.py 3.0.0 closed
+2026-09-22 16:37:29.573822: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:37:29.574460: Running on_exit tasks
+2026-09-22 16:37:29.574846: wfastcgi.py 3.0.0 closed
+2026-09-22 16:37:29.575342: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:37:29.575638: Running on_exit tasks
+2026-09-22 16:37:29.575959: wfastcgi.py 3.0.0 closed
+2026-09-22 16:39:04.234132: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:39:04.235598: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:39:06.615620: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:39:06.616729: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:39:10.471829: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:39:10.472709: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:44:17.612851: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:44:17.613283: Running on_exit tasks
+2026-09-22 16:44:17.613546: wfastcgi.py 3.0.0 closed
+2026-09-22 16:44:19.926443: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:44:19.926943: Running on_exit tasks
+2026-09-22 16:44:19.927390: wfastcgi.py 3.0.0 closed
+2026-09-22 16:44:23.934689: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:44:23.935182: Running on_exit tasks
+2026-09-22 16:44:23.935516: wfastcgi.py 3.0.0 closed
+2026-09-22 16:50:25.795745: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 16:50:25.798617: wfastcgi.py 3.0.0 initialized
+2026-09-22 16:55:39.678056: Unhandled exception in wfastcgi.py: Traceback (most recent call last):
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 774, in main
+    record = read_fastcgi_record(fcgi_stream)
+  File "C:\websites\IPL_API\venv\Lib\site-packages\wfastcgi.py", line 158, in read_fastcgi_record
+    data = stream.read(8)     # read record
+OSError: [Errno 22] Invalid argument
+2026-09-22 16:55:39.678494: Running on_exit tasks
+2026-09-22 16:55:39.678851: wfastcgi.py 3.0.0 closed
+2026-09-22 17:04:44.328198: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 17:04:44.329828: wfastcgi.py 3.0.0 initialized
+2026-09-22 17:04:44.483589: wfastcgi.py will restart when files in C:\websites\IPL_API\ are changed: .*((\.py)|(\.config))$
+2026-09-22 17:04:44.484853: wfastcgi.py 3.0.0 initialized

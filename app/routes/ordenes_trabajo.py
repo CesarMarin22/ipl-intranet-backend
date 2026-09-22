@@ -312,20 +312,29 @@ def listar_flash_reports():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Filtro base: OT del usuario actual
-        filtro = f"U_CreateUser eq '{username}'"
-
-        # Si tiene perfil de Flash Report, agregar filtros adicionales
+        # Filtro según perfil del usuario
         PERFIL_FILTROS_FLASH = {
             4: {"call_type_id": 24, "nombre_problema": "Seguridad"},
             6: {"call_type_id": 28, "nombre_problema": "Operación"},
             7: {"call_type_id": 27, "nombre_problema": "Vehículos"},
         }
 
-        info_perfil = PERFIL_FILTROS_FLASH.get(perfil)
-        if info_perfil:
-            condicion_extra = f"CallType eq {info_perfil['call_type_id']}"
-            filtro = f"({filtro}) or (U_Severidad ne null and ({condicion_extra}))"
+        # Admin (perfil 1): Ve TODOS los Flash Reports sin restricción
+        if perfil == 1:
+            filtro = "U_Severidad ne null"
+        # Otros perfiles: Filtrar por su CallType correspondiente
+        elif perfil in PERFIL_FILTROS_FLASH:
+            call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
+            filtro = f"CallType eq {call_type_id}"
+        # Si el perfil no está en la lista, no mostrar nada
+        else:
+            return ok_response({
+                "llamadas": [],
+                "page": page,
+                "per_page": per_page,
+                "total_registros": 0,
+                "total_paginas": 1,
+            })
 
         filtro_codificado = quote(filtro)
 
@@ -368,7 +377,7 @@ def listar_flash_reports():
 
 @ordenes_trabajo_bp.route("/audi", methods=["GET"])
 def listar_ot_audi():
-    """Lista todas las OT de Audi (Series = 374, CustomerName = AUDI MEXICO)"""
+    """Lista OT de Audi (Series = 374)"""
     valid, response = validate_active_session()
     if not valid:
         return response
@@ -377,6 +386,8 @@ def listar_ot_audi():
     if not allowed:
         return response
 
+    username = session.get("username", "")
+    perfil = session.get("perfil")
     page = int(request.args.get("page", 1))
     per_page = 10
 
@@ -384,7 +395,13 @@ def listar_ot_audi():
         skip = (page - 1) * per_page
         top = per_page
 
-        filtro = "Series eq 374 and CustomerName eq 'AUDI MEXICO'"
+        # Admin (perfil 1): Ve TODAS las OT Audi
+        # Otros: Solo las que creó
+        if perfil == 1:
+            filtro = "Series eq 374"
+        else:
+            filtro = f"Series eq 374 and U_CreateUser eq '{username}'"
+
         filtro_codificado = quote(filtro)
 
         data = sap_get(
@@ -421,6 +438,72 @@ def listar_ot_audi():
 
     except Exception as e:
         return error_response(f"Error al listar OT Audi: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/normal", methods=["GET"])
+def listar_ot_normal():
+    """Lista OT Normal del usuario actual (o todas si es Admin)"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    allowed, response = require_permission("OT_NORMAL", "VER")
+    if not allowed:
+        return response
+
+    username = session.get("username", "")
+    perfil = session.get("perfil")
+    page = int(request.args.get("page", 1))
+    per_page = 10
+
+    try:
+        skip = (page - 1) * per_page
+        top = per_page
+
+        # Admin (perfil 1): Ve TODAS las OT Normal
+        # Otros: Solo las que creó
+        if perfil == 1:
+            filtro = "Series ne 374"  # Excluir Audi (Series 374)
+        else:
+            filtro = f"Series ne 374 and U_CreateUser eq '{username}'"
+
+        filtro_codificado = quote(filtro)
+
+        data = sap_get(
+            f"ServiceCalls?"
+            f"$filter={filtro_codificado}"
+            f"&$orderby=AssignedDate desc"
+            f"&$skip={skip}&$top={top}"
+            f"&$select=DocNum,CustomerRefNo,CustomerName,ManufacturerSerialNum,AssignedDate,Series,U_Severidad,U_CreateUser"
+            f"&$inlinecount=allpages"
+        )
+
+        total_registros = int(data.get("odata.count", 0))
+        ordenes = data.get("value", [])
+
+        # Formatear fechas
+        for orden in ordenes:
+            fecha_iso = orden.get("AssignedDate", "")
+            try:
+                fecha_obj = datetime.strptime(fecha_iso, "%Y-%m-%dT%H:%M:%SZ")
+                orden["FechaFormateada"] = fecha_obj.strftime("%d/%m/%Y")
+            except Exception:
+                orden["FechaFormateada"] = fecha_iso
+
+        total_paginas = ((total_registros + per_page - 1) // per_page) if total_registros else 1
+
+        return ok_response(
+            {
+                "ordenes": ordenes,
+                "page": page,
+                "per_page": per_page,
+                "total_registros": total_registros,
+                "total_paginas": total_paginas,
+            }
+        )
+
+    except Exception as e:
+        return error_response(f"Error al listar OT Normal: {str(e)}", 500)
 
 
 @ordenes_trabajo_bp.route("/tipos-problema", methods=["GET"])
@@ -468,6 +551,10 @@ def guardar_csv():
 
     if tipo == "seguridad":
         module_name = "OT_SEGURIDAD"
+        # Flash Report: solo perfil 1 (Admin) o 4 (Seguridad) pueden crear
+        perfil = session.get("perfil")
+        if perfil not in [1, 4]:
+            return error_response("Solo Seguridad (perfil 4) puede crear Flash Reports", 403)
     elif tipo == "audi":
         module_name = "OT_AUDI"
     else:
