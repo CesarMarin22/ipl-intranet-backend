@@ -320,8 +320,9 @@ def listar_flash_reports():
         }
 
         # Admin ve TODOS los Flash Reports, otros ven solo su tipo
+        # TEST: cambiar a CallType para ver si es un problema de U_Severidad
         if perfil == 1:  # Admin
-            filtro = "U_Severidad ne null"
+            filtro = "CallType eq 24 or CallType eq 28 or CallType eq 27"
         elif perfil in PERFIL_FILTROS_FLASH:
             call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
             filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
