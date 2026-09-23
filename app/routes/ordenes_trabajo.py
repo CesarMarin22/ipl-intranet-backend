@@ -43,7 +43,8 @@ AREAS_FLASH = {
     12: {"call_type_id": 27, "problem_type_id": 203},  # LEGAL
 }
 PERFIL_ADMIN = 1
-ESTATUS_SEGUIMIENTO = ("Abierto", "En Proceso", "Cerrado")
+# "Abierto" is the implicit state of a Flash Report without follow-ups, so it is not selectable
+ESTATUS_SEGUIMIENTO = ("En Proceso", "Cerrado")
 
 
 def area_flash_usuario():
