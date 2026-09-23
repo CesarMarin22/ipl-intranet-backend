@@ -7,8 +7,9 @@ from datetime import datetime
 from urllib.parse import quote
 
 import requests
-from flask import Blueprint, request, session
+from flask import Blueprint, Response, request, session
 
+from app import drive_service
 from app.helpers import ok_response, error_response, validate_active_session, require_permission
 
 ordenes_trabajo_bp = Blueprint("ordenes_trabajo", __name__)
@@ -787,7 +788,60 @@ def guardar_csv():
 
     except Exception as e:
         return error_response(f"Error al generar CSV: {str(e)}", 500)
-    
+
+
+@ordenes_trabajo_bp.route("/subir-imagenes-flash", methods=["POST"])
+def subir_imagenes_flash():
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    ref_id = (request.form.get("flashRefId") or request.args.get("flashRefId") or "").strip()
+    if not ref_id:
+        return error_response("Falta flashRefId", 400)
+
+    archivos = request.files.getlist("imagenes")
+    if not archivos:
+        return error_response("No se recibieron imágenes", 400)
+
+    try:
+        subidas = [
+            drive_service.subir_imagen(
+                ref_id,
+                archivo.filename,
+                archivo.read(),
+                archivo.mimetype or "application/octet-stream",
+            )
+            for archivo in archivos
+        ]
+        return ok_response({"archivos": subidas}, "Imágenes subidas correctamente.")
+    except Exception as e:
+        return error_response(f"Error al subir imágenes a Drive: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/ver-imagenes-flash/<ref_id>", methods=["GET"])
+def ver_imagenes_flash(ref_id):
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+    try:
+        return ok_response({"archivos": drive_service.listar_imagenes(ref_id)})
+    except Exception as e:
+        return error_response(f"Error al consultar imágenes: {str(e)}", 500)
+
+
+@ordenes_trabajo_bp.route("/imagen-drive/<file_id>", methods=["GET"])
+def imagen_drive(file_id):
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+    try:
+        contenido, mimetype, _nombre = drive_service.descargar_imagen(file_id)
+        return Response(contenido, mimetype=mimetype)
+    except Exception as e:
+        return error_response(f"Error al descargar imagen: {str(e)}", 500)
+
+
 SUCURSALES_SAP = {
     87: "AGS",
     82: "CLY",

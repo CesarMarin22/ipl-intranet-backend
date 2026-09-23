@@ -2,3 +2,5 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 python-dotenv==1.0.1
 hdbcli==2.20.22
+google-api-python-client==2.200.0
+google-auth==2.58.0
