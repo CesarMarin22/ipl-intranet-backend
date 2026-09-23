@@ -141,12 +141,15 @@ def buscar_clientes():
     if not query:
         return error_response("El parámetro query es obligatorio", 400)
 
+    # Escape single quotes for OData (SAP API)
+    query_escaped = query.replace("'", "''")
+
     try:
         data = sap_get(
             "BusinessPartners?"
-            f"$filter=(contains(CardCode, '{query}') "
-            f"or contains(CardName, '{query}') "
-            f"or contains(CardForeignName, '{query}')) "
+            f"$filter=(contains(CardCode, '{query_escaped}') "
+            f"or contains(CardName, '{query_escaped}') "
+            f"or contains(CardForeignName, '{query_escaped}')) "
             f"and CardType eq 'cCustomer'"
         )
         return ok_response(data)
@@ -574,15 +577,16 @@ def tipos_problema():
     if not allowed:
         return response
 
-    # HARDCODED FROM OTA - REPLICATED EXACTLY AS IN OTA
-    # These match the Names shown in OTA's frontend for "Relación del Suceso"
-    tipos_fijos = [
+    # REPLICATE EXACTLY FROM OTA - Return ALL problem types, let frontend filter
+    # OTA's endpoint returns all, then javascript filters by IDs
+    tipos_todos = [
         {"ProblemTypeID": 30, "Name": "SEGURIDAD"},
         {"ProblemTypeID": 202, "Name": "OPERACIÓN"},
         {"ProblemTypeID": 203, "Name": "VEHÍCULOS"},
+        # Add more if needed, but for Flash Reports only these 3 are used
     ]
 
-    return ok_response({"value": tipos_fijos})
+    return ok_response({"value": tipos_todos})
 
 @ordenes_trabajo_bp.route("/severidades", methods=["GET"])
 def obtener_severidades():
