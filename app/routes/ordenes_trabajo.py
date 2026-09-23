@@ -36,23 +36,17 @@ SEVERIDAD_INFO = {
 }
 
 # Flash Report areas: CallType = "Clasificación del Suceso", ProblemType = "Relación del Suceso".
-# OTA keyed these by its own profile ids (4/6/7); in the Intranet Calidad is profile 11 and
-# Legal only exists as a department (7 GESTION JURIDICA), so users are matched by profile or department.
+# Keyed by Intranet profile id (OTA used 4/6/7; the Intranet uses 4/11/12).
 AREAS_FLASH = {
-    "SEGURIDAD": {"call_type_id": 24, "problem_type_id": 30, "perfiles": {4}, "departamentos": {3}},
-    "CALIDAD": {"call_type_id": 28, "problem_type_id": 202, "perfiles": {11}, "departamentos": {4}},
-    "LEGAL": {"call_type_id": 27, "problem_type_id": 203, "perfiles": set(), "departamentos": {7}},
+    4: {"call_type_id": 24, "problem_type_id": 30},   # SEGURIDAD
+    11: {"call_type_id": 28, "problem_type_id": 202},  # CALIDAD
+    12: {"call_type_id": 27, "problem_type_id": 203},  # LEGAL
 }
 PERFIL_ADMIN = 1
 
 
 def area_flash_usuario():
-    perfil = session.get("perfil_id")
-    depaid = session.get("depaid")
-    for area in AREAS_FLASH.values():
-        if perfil in area["perfiles"] or depaid in area["departamentos"]:
-            return area
-    return None
+    return AREAS_FLASH.get(session.get("perfil_id"))
 
 
 def filtro_flash_visibles():
