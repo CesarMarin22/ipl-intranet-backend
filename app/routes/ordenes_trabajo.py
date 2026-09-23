@@ -582,7 +582,7 @@ def tipos_problema():
         while True:
             data = sap_get(
                 "ServiceCallProblemTypes?"
-                f"$filter=Active eq 'Y'&$orderby=Name asc&$skip={skip}&$top={top}"
+                f"$orderby=Name asc&$skip={skip}&$top={top}"
             )
 
             rows = data.get("value", [])
@@ -593,8 +593,13 @@ def tipos_problema():
 
             skip += top
 
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"TIPOS_PROBLEMA: total={len(all_tipos)}, data={[{'id': t.get('ProblemTypeID'), 'name': t.get('Name')} for t in all_tipos[:5]]}\n")
+
         return ok_response({"value": all_tipos})
     except Exception as e:
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"ERROR TIPOS_PROBLEMA: {str(e)}\n")
         return error_response(f"Error al consultar tipos problema SAP: {str(e)}", 500)
 
 @ordenes_trabajo_bp.route("/severidades", methods=["GET"])
