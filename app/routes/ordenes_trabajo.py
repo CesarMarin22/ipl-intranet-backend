@@ -319,9 +319,10 @@ def listar_flash_reports():
             7: {"call_type_id": 27},
         }
 
-        # Admin (perfil 1): Ve TODOS los Flash Reports (cualquier CallType: 24, 28, 27)
+        # Admin (perfil 1): Ve TODOS los Flash Reports
+        # TEST: traer TODOS los registros para verificar qué hay
         if perfil == 1:
-            filtro = "CallType eq 24 or CallType eq 28 or CallType eq 27"
+            filtro = ""  # Sin filtro = todos
         # Otros perfiles: Filtrar por su CallType correspondiente
         elif perfil in PERFIL_FILTROS_FLASH:
             call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
