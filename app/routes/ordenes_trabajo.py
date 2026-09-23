@@ -308,6 +308,9 @@ def listar_flash_reports():
     page = int(request.args.get("page", 1))
     per_page = 10
 
+    # DEBUG: imprimir en logs
+    print(f"🔥 DEBUG FLASH-REPORTS: perfil={perfil}, username={username}, page={page}")
+
     try:
         skip = (page - 1) * per_page
         top = per_page
@@ -323,6 +326,7 @@ def listar_flash_reports():
         # TEST: cambiar a CallType para ver si es un problema de U_Severidad
         if perfil == 1:  # Admin
             filtro = "CallType eq 24 or CallType eq 28 or CallType eq 27"
+            print(f"🔥 DEBUG: usando filtro CallType para Admin: {filtro}")
         elif perfil in PERFIL_FILTROS_FLASH:
             call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
             filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
