@@ -403,7 +403,10 @@ def listar_flash_reports():
             llamadas += data.get("value", [])
             next_link = data.get("odata.nextLink")
 
-        # Formatear fechas
+        estatus_por_docnum = estatus_seguimiento_actual([ll.get("DocNum") for ll in llamadas])
+        nombres_clasificacion = {24: "Seguridad", 28: "Operación", 27: "Vehículos"}
+        nombres_relacion = {30: "Seguridad", 202: "Operación", 203: "Vehículos"}
+
         for llamada in llamadas:
             fecha_iso = llamada.get("AssignedDate", "")
             try:
@@ -411,6 +414,29 @@ def listar_flash_reports():
                 llamada["FechaFormateada"] = fecha_obj.strftime("%d/%m/%Y")
             except Exception:
                 llamada["FechaFormateada"] = fecha_iso
+
+            # Older Flash Reports may use other types; look those up once and reuse the name
+            call_type = llamada.get("CallType")
+            if call_type not in nombres_clasificacion:
+                nombres_clasificacion[call_type] = obtener_nombre_tipo_orden(call_type)
+            problem_type = llamada.get("ProblemType")
+            if problem_type not in nombres_relacion:
+                nombres_relacion[problem_type] = obtener_nombre_tipo_problema(problem_type)
+
+            etiqueta, color_fondo, color_texto = SEVERIDAD_INFO.get(
+                llamada.get("U_Severidad"), (llamada.get("U_Severidad"), "#dddddd", "#111111")
+            )
+            llamada.update(
+                {
+                    "ClasificacionNombre": nombres_clasificacion[call_type],
+                    "RelacionNombre": nombres_relacion[problem_type],
+                    "SucursalName": obtener_nombre_sucursal(llamada.get("Series")),
+                    "SeveridadEtiqueta": etiqueta,
+                    "SeveridadColorFondo": color_fondo,
+                    "SeveridadColorTexto": color_texto,
+                    "EstatusSeguimiento": estatus_por_docnum.get(llamada.get("DocNum"), "Abierto"),
+                }
+            )
 
         total_paginas = ((total_registros + per_page - 1) // per_page) if total_registros else 1
 
@@ -895,6 +921,24 @@ def obtener_conexion_seguimiento():
         )
     """)
     return conn
+
+
+def estatus_seguimiento_actual(docnums):
+    """Latest follow-up status per DocNum (Flash Reports without follow-ups are absent)."""
+    docnums = [int(d) for d in docnums if d is not None]
+    if not docnums:
+        return {}
+    conn = obtener_conexion_seguimiento()
+    try:
+        marcadores = ",".join("?" * len(docnums))
+        filas = conn.execute(
+            f"""SELECT docnum, estatus FROM seguimiento
+                WHERE id IN (SELECT MAX(id) FROM seguimiento WHERE docnum IN ({marcadores}) GROUP BY docnum)""",
+            docnums,
+        ).fetchall()
+    finally:
+        conn.close()
+    return {fila["docnum"]: fila["estatus"] for fila in filas}
 
 
 def obtener_nombre_tipo_orden(call_type_id):
