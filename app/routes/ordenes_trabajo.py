@@ -670,9 +670,9 @@ def guardar_csv():
         "U_Qty8", "U_Code8", "U_Qty9", "U_Code9", "U_Qty10", "U_Code10", "U_Qty11", "U_Code11",
         "U_Qty12", "U_Code12", "U_Qty13", "U_Code13", "U_Qty14", "U_Code14", "U_Qty15", "U_Code15",
         "U_Qty16", "U_Code16", "U_Qty17", "U_Code17", "U_Qty18", "U_Code18", "U_Qty19", "U_Code19",
-        "U_Qty20", "U_Code20", "U_Version", "U_CSSR", "U_Severidad", "U_AreaTrabajo", "U_AccionesR",
+        "U_Qty20", "U_Code20", "U_Version", "U_CSSR", "U_Severidad", "U_AreaT", "U_AccionesR",
         "U_Plan", "U_Leccion", "U_Costo", "U_Supervisor", "U_A_Orden", "U_A_NumTec", "U_A_Horas",
-        "U_NoOT", "U_A_TipoOT", "U_A_Causa", "U_A_TipoDano"
+        "U_NoOT", "U_A_TipoOT", "U_A_Causa", "U_A_TipoDano", "U_A_FolioE"
     ]
 
     encabezados_2 = [
@@ -686,9 +686,9 @@ def guardar_csv():
         "U_Qty9", "U_Code9", "U_Qty10", "U_Code10", "U_Qty11", "U_Code11", "U_Qty12", "U_Code12",
         "U_Qty13", "U_Code13", "U_Qty14", "U_Code14", "U_Qty15", "U_Code15",
         "U_Qty16", "U_Code16", "U_Qty17", "U_Code17", "U_Qty18", "U_Code18", "U_Qty19", "U_Code19",
-        "U_Qty20", "U_Code20", "U_Version", "U_CSSR", "U_Severidad", "U_AreaTrabajo", "U_AccionesR",
+        "U_Qty20", "U_Code20", "U_Version", "U_CSSR", "U_Severidad", "U_AreaT", "U_AccionesR",
         "U_Plan", "U_Leccion", "U_Costo", "U_Supervisor", "U_A_Orden", "U_A_NumTec", "U_A_Horas",
-        "U_NoOT", "U_A_TipoOT", "U_A_Causa", "U_A_TipoDano"
+        "U_NoOT", "U_A_TipoOT", "U_A_Causa", "U_A_TipoDano", "U_A_FolioE"
     ]
 
     try:
@@ -708,7 +708,7 @@ def guardar_csv():
 
         if tipo_refacciones == "0":
             refacciones_instaladas = [""] * 20
-            refacciones_requeridas = refacciones_planas[:20]
+            refacciones_requeridas = refacciones_planas[20:]
         elif tipo_refacciones == "1":
             refacciones_instaladas = refacciones_planas[:20]
             refacciones_requeridas = [""] * 20
@@ -763,6 +763,10 @@ def guardar_csv():
             datos.get("ordenBase", " "),
             datos.get("causa", " "),
             datos.get("tipoDanio", " "),
+            # U_A_FolioE carries the flashRefId for Flash Reports; the email middleware reads it from the last column
+            (str(datos.get("flashRefId", "")).strip() or " ")
+            if tipo == "seguridad"
+            else datos.get("folioEx", " "),
         ]
 
         with open(csv_path, mode="w", newline="", encoding="utf-8") as csvfile:
