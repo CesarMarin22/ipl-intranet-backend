@@ -574,33 +574,15 @@ def tipos_problema():
     if not allowed:
         return response
 
-    try:
-        all_tipos = []
-        skip = 0
-        top = 20
+    # HARDCODED FROM OTA - IDs para Flash Reports Seguridad: 30, 202, 203
+    # These are the only 3 problem types used for Flash Reports
+    tipos_fijos = [
+        {"ProblemTypeID": 30, "Name": "Seguridad - Incidente", "Descripcion": "Seguridad - Incidente"},
+        {"ProblemTypeID": 202, "Name": "Seguridad - Accidente", "Descripcion": "Seguridad - Accidente"},
+        {"ProblemTypeID": 203, "Name": "Seguridad - Cuasi Accidente", "Descripcion": "Seguridad - Cuasi Accidente"},
+    ]
 
-        while True:
-            data = sap_get(
-                "ServiceCallProblemTypes?"
-                f"$orderby=Name asc&$skip={skip}&$top={top}"
-            )
-
-            rows = data.get("value", [])
-            all_tipos.extend(rows)
-
-            if len(rows) < top:
-                break
-
-            skip += top
-
-        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
-            f.write(f"TIPOS_PROBLEMA: total={len(all_tipos)}, data={[{'id': t.get('ProblemTypeID'), 'name': t.get('Name')} for t in all_tipos[:5]]}\n")
-
-        return ok_response({"value": all_tipos})
-    except Exception as e:
-        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
-            f.write(f"ERROR TIPOS_PROBLEMA: {str(e)}\n")
-        return error_response(f"Error al consultar tipos problema SAP: {str(e)}", 500)
+    return ok_response({"value": tipos_fijos})
 
 @ordenes_trabajo_bp.route("/severidades", methods=["GET"])
 def obtener_severidades():
