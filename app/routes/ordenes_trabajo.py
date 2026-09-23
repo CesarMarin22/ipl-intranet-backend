@@ -312,23 +312,15 @@ def listar_flash_reports():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Filtro según perfil del usuario (basado en lógica de OTA)
+        # Lógica de OTA: solo perfiles 4, 6, 7 ven Flash Reports de su tipo
         PERFIL_FILTROS_FLASH = {
             4: {"call_type_id": 24},
             6: {"call_type_id": 28},
             7: {"call_type_id": 27},
         }
 
-        # Admin (perfil 1): Ve TODOS los Flash Reports
-        # Flash Reports se identifican por U_Severidad ne null
-        if perfil == 1:
-            filtro = "U_Severidad ne null"
-        # Otros perfiles: Filtrar por su CallType correspondiente
-        elif perfil in PERFIL_FILTROS_FLASH:
-            call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
-            filtro = f"CallType eq {call_type_id}"
-        # Si el perfil no está en la lista, no mostrar nada
-        else:
+        if perfil not in PERFIL_FILTROS_FLASH:
+            # Si no es un perfil de Flash Report, retornar vacío
             return ok_response({
                 "llamadas": [],
                 "page": page,
@@ -336,6 +328,10 @@ def listar_flash_reports():
                 "total_registros": 0,
                 "total_paginas": 1,
             })
+
+        # Filtro: Flash Reports de su tipo que tengan U_Severidad
+        call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
+        filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
 
         # Construir URL sin incluir $filter si está vacío
         url = "ServiceCalls?"
@@ -465,9 +461,9 @@ def listar_ot_normal():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Admin (perfil 1): Ve TODAS las OT Normal
-        # Otros: Solo las que creó
-        # Excluir: Audi (Series 374) y Flash Reports (U_Severidad ne null)
+        # Lógica de OTA: OT Normal = Series ne 374 (excluir Audi) y U_Severidad eq null (excluir Flash Reports)
+        # Admin ve todas sus OT + Flash Reports (en endpoint separado)
+        # Otros ven solo sus OT creadas
         if perfil == 1:
             filtro = "Series ne 374 and U_Severidad eq null"
         else:
