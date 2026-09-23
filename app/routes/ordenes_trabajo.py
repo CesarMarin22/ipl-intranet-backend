@@ -574,12 +574,12 @@ def tipos_problema():
     if not allowed:
         return response
 
-    # HARDCODED FROM OTA - IDs para Flash Reports Seguridad: 30, 202, 203
-    # These are the only 3 problem types used for Flash Reports
+    # HARDCODED FROM OTA - REPLICATED EXACTLY AS IN OTA
+    # These match the Names shown in OTA's frontend for "Relación del Suceso"
     tipos_fijos = [
-        {"ProblemTypeID": 30, "Name": "Seguridad - Incidente", "Descripcion": "Seguridad - Incidente"},
-        {"ProblemTypeID": 202, "Name": "Seguridad - Accidente", "Descripcion": "Seguridad - Accidente"},
-        {"ProblemTypeID": 203, "Name": "Seguridad - Cuasi Accidente", "Descripcion": "Seguridad - Cuasi Accidente"},
+        {"ProblemTypeID": 30, "Name": "SEGURIDAD"},
+        {"ProblemTypeID": 202, "Name": "OPERACIÓN"},
+        {"ProblemTypeID": 203, "Name": "VEHÍCULOS"},
     ]
 
     return ok_response({"value": tipos_fijos})
