@@ -606,28 +606,26 @@ def obtener_severidades():
 
     call_type = request.args.get("call_type", "24")  # Default: Seguridad
 
-    # REPLICATED EXACTLY FROM OTA - Severidades por CallType
+    # REPLICATED EXACTLY FROM OTA script.js - cargarSeveridades()
     opciones = []
 
     if call_type == "24":  # Seguridad
         opciones = [
-            {"code": "Menor", "label": "Menor"},
-            {"code": "Moderada", "label": "Moderada"},
-            {"code": "Critica", "label": "Crítica"},
-            {"code": "Fatal", "label": "Fatal"},
+            {"value": "Fatal", "text": "Fatal (fatalidad o incapacidad permanente o total)", "color": "#ff0000", "textColor": "white"},
+            {"value": "Critica", "text": "Crítica (daños materiales graves e incapacidad de más de 3 días)", "color": "#ffc000", "textColor": "black"},
+            {"value": "Moderada", "text": "Moderada (daños materiales leves e incapacidad)", "color": "#ffff00", "textColor": "black"},
+            {"value": "Menor", "text": "Menor (sin daños materiales ni incapacidad)", "color": "#00b050", "textColor": "white"},
         ]
     elif call_type == "28":  # Operación (Calidad)
         opciones = [
-            {"code": "Bajo", "label": "Bajo (Operación)"},
-            {"code": "ModeradaO", "label": "Moderada (Operación)"},
-            {"code": "Alto", "label": "Alto (Operación)"},
-            {"code": "CriticaO", "label": "Crítica (Operación)"},
+            {"value": "CriticaO", "text": "Alto (Detiene la operación o provoca pérdidas económicas importantes, pérdida de clientes o incumplimientos críticos.)", "color": "#ff0000", "textColor": "white"},
+            {"value": "Alto", "text": "Medio (Afecta significativamente la operación, genera retrasos importantes o incumplimiento de requisitos del cliente.)", "color": "#ffc000", "textColor": "black"},
+            {"value": "ModeradaO", "text": "Bajo (Genera retrasos o afectaciones parciales en la operación, sin detener el proceso.)", "color": "#ffff00", "textColor": "black"},
         ]
     elif call_type == "27":  # Vehículos (Legal)
         opciones = [
-            {"code": "MenorV", "label": "Menor (Vehículos)"},
-            {"code": "ModeradaV", "label": "Moderada (Vehículos)"},
-            {"code": "CriticaV", "label": "Crítica (Vehículos)"},
+            {"value": "CriticaV", "text": "Crítica (Pérdida Total)", "color": "#ff0000", "textColor": "white"},
+            {"value": "ModeradaV", "text": "Moderada (Necesita aseguradora)", "color": "#ffc000", "textColor": "black"},
         ]
 
     return ok_response({"opciones": opciones})
