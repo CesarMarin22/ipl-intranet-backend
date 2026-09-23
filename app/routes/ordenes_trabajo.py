@@ -9,7 +9,7 @@ from urllib.parse import quote
 import requests
 from flask import Blueprint, Response, request, session
 
-from app import drive_service
+from app import drive_service, flash_notificaciones
 from app.helpers import ok_response, error_response, validate_active_session, require_permission
 
 ordenes_trabajo_bp = Blueprint("ordenes_trabajo", __name__)
@@ -43,6 +43,7 @@ AREAS_FLASH = {
     12: {"call_type_id": 27, "problem_type_id": 203},  # LEGAL
 }
 PERFIL_ADMIN = 1
+ESTATUS_SEGUIMIENTO = ("Abierto", "En Proceso", "Cerrado")
 
 
 def area_flash_usuario():
@@ -1198,6 +1199,12 @@ def obtener_seguimiento(docnum):
         return response
 
     try:
+        rows = sap_get(f"ServiceCalls?$filter=DocNum eq {docnum}&$select=DocNum,U_Severidad,U_CreateUser,CallType,ProblemType").get("value", [])
+        if not rows or not rows[0].get("U_Severidad"):
+            return error_response("No se encontró el Flash Report", 404)
+        if not flash_visible_para_usuario(rows[0]):
+            return error_response("No autorizado", 403)
+
         conn = obtener_conexion_seguimiento()
         historial = conn.execute(
             "SELECT * FROM seguimiento WHERE docnum = ? ORDER BY creado_en DESC",
@@ -1212,6 +1219,7 @@ def obtener_seguimiento(docnum):
                 "docnum": docnum,
                 "historial": [dict(row) for row in historial],
                 "ya_cerrado": ya_cerrado,
+                "puede_seguimiento": perfil_puede_dar_seguimiento(rows[0].get("CallType")),
             }
         )
 
@@ -1236,41 +1244,62 @@ def guardar_seguimiento(docnum):
     fecha_compromiso = datos.get("fecha_compromiso", "").strip()
     comentario = datos.get("comentario", "").strip()
 
-    if not estatus:
-        return error_response("El estatus es obligatorio", 400)
+    if estatus not in ESTATUS_SEGUIMIENTO:
+        return error_response(f"Estatus inválido. Opciones: {', '.join(ESTATUS_SEGUIMIENTO)}", 400)
 
     try:
-        # Obtener la OT desde SAP para validaciones
-        ot_data = sap_get(f"ServiceCalls?$filter=DocNum eq {docnum}")
-        ot = ot_data.get("value", [{}])[0]
+        rows = sap_get(f"ServiceCalls?$filter=DocNum eq {docnum}").get("value", [])
+        if not rows or not rows[0].get("U_Severidad"):
+            return error_response("No se encontró el Flash Report en SAP", 404)
+        ot = rows[0]
 
-        if not ot:
-            return error_response("No se encontró la OT en SAP", 404)
+        if not perfil_puede_dar_seguimiento(ot.get("CallType")):
+            return error_response("No tiene permiso para dar seguimiento a este Flash Report", 403)
 
-        # Validar permisos según el CallType
-        call_type_id = ot.get("CallType")
-        if not perfil_puede_dar_seguimiento(call_type_id):
-            return error_response("No tiene permiso para dar seguimiento a esta OT", 403)
-
-        # Guardar en base de datos
         creado_por = session.get("username", "Sistema")
         creado_en = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         conn = obtener_conexion_seguimiento()
-        conn.execute(
-            """INSERT INTO seguimiento
-               (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en),
-        )
-        conn.commit()
-        conn.close()
+        try:
+            ya_cerrado = conn.execute(
+                "SELECT 1 FROM seguimiento WHERE docnum = ? AND estatus = 'Cerrado' LIMIT 1", (docnum,)
+            ).fetchone()
+            if ya_cerrado:
+                return error_response("Este Flash Report ya fue cerrado; no se pueden agregar más seguimientos", 409)
+
+            conn.execute(
+                """INSERT INTO seguimiento
+                   (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (docnum, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        # Same notifications as OTA; a mail failure must not undo the saved follow-up
+        severidad = SEVERIDAD_INFO.get(ot.get("U_Severidad"), (ot.get("U_Severidad") or "N/A", "#dddddd", "#111111"))
+        sucursal = obtener_nombre_sucursal(ot.get("Series"))
+        correo_error = None
+        try:
+            if estatus == "Cerrado":
+                flash_notificaciones.enviar_correo_cierre(
+                    ot, severidad, sucursal, responsable, comentario, creado_por, creado_en
+                )
+            else:
+                flash_notificaciones.enviar_correo_actualizacion(
+                    ot, severidad, sucursal, estatus, responsable, fecha_compromiso, comentario, creado_por, creado_en
+                )
+        except Exception as e:
+            correo_error = str(e)
 
         return ok_response(
             {
                 "docnum": docnum,
                 "estatus": estatus,
                 "creado_en": creado_en,
+                "correo_enviado": correo_error is None,
+                "correo_error": correo_error,
             },
             "Seguimiento guardado correctamente",
             201,
