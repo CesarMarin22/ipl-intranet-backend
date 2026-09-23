@@ -1,4 +1,4 @@
-# RECOMPILE_FORCE: 2026-09-23T23:50:00 - Added severidades endpoint and perfil-based filtering
+# RECOMPILE_FORCE: 2026-09-23T23:55:00 - Fixed severidades endpoint to return correct labels
 import os
 import csv
 import sqlite3
@@ -606,22 +606,29 @@ def obtener_severidades():
 
     call_type = request.args.get("call_type", "24")  # Default: Seguridad
 
-    # Filtrar severidades según el CallType
-    severidades_filtradas = {}
-    if call_type == "24":  # Seguridad
-        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if not any(x in k for x in ["O", "V"])}
-    elif call_type == "28":  # Operación (Calidad)
-        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if "O" in k or k in ["Moderada", "Critica", "Fatal"]}
-    elif call_type == "27":  # Vehículos (Legal)
-        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if "V" in k or k in ["Critica"]}
-    else:
-        severidades_filtradas = SEVERIDAD_INFO
+    # REPLICATED EXACTLY FROM OTA - Severidades por CallType
+    opciones = []
 
-    # Retornar en formato para select
-    opciones = [
-        {"code": code, "label": SEVERIDAD_INFO[code][0], "color": SEVERIDAD_INFO[code][1]}
-        for code in severidades_filtradas.keys()
-    ]
+    if call_type == "24":  # Seguridad
+        opciones = [
+            {"code": "Menor", "label": "Menor"},
+            {"code": "Moderada", "label": "Moderada"},
+            {"code": "Critica", "label": "Crítica"},
+            {"code": "Fatal", "label": "Fatal"},
+        ]
+    elif call_type == "28":  # Operación (Calidad)
+        opciones = [
+            {"code": "Bajo", "label": "Bajo (Operación)"},
+            {"code": "ModeradaO", "label": "Moderada (Operación)"},
+            {"code": "Alto", "label": "Alto (Operación)"},
+            {"code": "CriticaO", "label": "Crítica (Operación)"},
+        ]
+    elif call_type == "27":  # Vehículos (Legal)
+        opciones = [
+            {"code": "MenorV", "label": "Menor (Vehículos)"},
+            {"code": "ModeradaV", "label": "Moderada (Vehículos)"},
+            {"code": "CriticaV", "label": "Crítica (Vehículos)"},
+        ]
 
     return ok_response({"opciones": opciones})
 
