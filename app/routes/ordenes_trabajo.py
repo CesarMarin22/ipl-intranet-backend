@@ -386,7 +386,15 @@ def listar_flash_reports():
         )
 
     except Exception as e:
-        return error_response(f"Error al listar Flash Reports: {str(e)}", 500)
+        return ok_response({
+            "llamadas": [],
+            "page": page,
+            "per_page": per_page,
+            "total_registros": 0,
+            "total_paginas": 1,
+            "_debug_error": str(e),
+            "_debug_error_type": type(e).__name__,
+        })
 
 
 @ordenes_trabajo_bp.route("/audi", methods=["GET"])
