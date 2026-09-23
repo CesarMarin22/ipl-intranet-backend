@@ -463,11 +463,11 @@ def listar_ot_normal():
 
         # Admin (perfil 1): Ve TODAS las OT Normal
         # Otros: Solo las que creó
-        # Excluir: Audi (Series 374) y Flash Reports (CallType in 24,28,27)
+        # Excluir: Audi (Series 374) y Flash Reports (U_Severidad ne null)
         if perfil == 1:
-            filtro = "Series ne 374 and CallType ne 24 and CallType ne 28 and CallType ne 27"
+            filtro = "Series ne 374 and U_Severidad eq null"
         else:
-            filtro = f"Series ne 374 and CallType ne 24 and CallType ne 28 and CallType ne 27 and U_CreateUser eq '{username}'"
+            filtro = f"Series ne 374 and U_Severidad eq null and U_CreateUser eq '{username}'"
 
         filtro_codificado = quote(filtro)
 
