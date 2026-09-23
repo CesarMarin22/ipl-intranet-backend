@@ -841,21 +841,6 @@ SUCURSALES_SAP = {
     374: "PUE",
 }
 
-# Severidad para Flash Reports (OT Seguridad)
-SEVERIDAD_INFO = {
-    "Menor": ("#00b050", "#ffffff"),
-    "Moderada": ("#ffff00", "#111111"),
-    "Critica": ("#ffc000", "#111111"),
-    "Fatal": ("#ff0000", "#ffffff"),
-    "CriticaO": ("#ff0000", "#ffffff"),
-    "Alto": ("#ffc000", "#111111"),
-    "ModeradaO": ("#ffff00", "#111111"),
-    "Bajo": ("#00b050", "#ffffff"),
-    "CriticaV": ("#ff0000", "#ffffff"),
-    "ModeradaV": ("#ffc000", "#111111"),
-    "MenorV": ("#00b050", "#ffffff"),
-}
-
 # Base de datos de seguimiento para Flash Reports
 SEGUIMIENTO_DB_PATH = os.getenv(
     "SEGUIMIENTO_DB_PATH", r"C:\Publish\addonServicioweb\seguimiento_flash.db"
@@ -1172,10 +1157,10 @@ def ver_orden_trabajo(docnum):
 
         # Información de severidad (para Flash Reports)
         if severidad_codigo:
-            color_fondo, color_texto = SEVERIDAD_INFO.get(
-                severidad_codigo, ("#dddddd", "#111111")
+            etiqueta, color_fondo, color_texto = SEVERIDAD_INFO.get(
+                severidad_codigo, (severidad_codigo, "#dddddd", "#111111")
             )
-            ot["SeveridadEtiqueta"] = severidad_codigo
+            ot["SeveridadEtiqueta"] = etiqueta
             ot["SeveridadColorFondo"] = color_fondo
             ot["SeveridadColorTexto"] = color_texto
 
