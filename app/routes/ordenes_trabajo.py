@@ -312,17 +312,16 @@ def listar_flash_reports():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Filtro según perfil del usuario
+        # Filtro según perfil del usuario (basado en lógica de OTA)
         PERFIL_FILTROS_FLASH = {
-            4: {"call_type_id": 24, "nombre_problema": "Seguridad"},
-            6: {"call_type_id": 28, "nombre_problema": "Operación"},
-            7: {"call_type_id": 27, "nombre_problema": "Vehículos"},
+            4: {"call_type_id": 24},
+            6: {"call_type_id": 28},
+            7: {"call_type_id": 27},
         }
 
-        # Admin (perfil 1): Ve TODOS los Flash Reports sin restricción
-        # Flash Reports se identifican por U_Severidad ne null
+        # Admin (perfil 1): Ve TODOS los Flash Reports (cualquier CallType: 24, 28, 27)
         if perfil == 1:
-            filtro = "U_Severidad ne null"
+            filtro = "CallType eq 24 or CallType eq 28 or CallType eq 27"
         # Otros perfiles: Filtrar por su CallType correspondiente
         elif perfil in PERFIL_FILTROS_FLASH:
             call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
@@ -463,11 +462,11 @@ def listar_ot_normal():
 
         # Admin (perfil 1): Ve TODAS las OT Normal
         # Otros: Solo las que creó
-        # Excluir: Audi (Series 374) y Flash Reports (U_Severidad ne null)
+        # Excluir: Audi (Series 374) y Flash Reports (CallType: 24, 28, 27)
         if perfil == 1:
-            filtro = "Series ne 374 and U_Severidad eq null"
+            filtro = "Series ne 374 and CallType ne 24 and CallType ne 28 and CallType ne 27"
         else:
-            filtro = f"Series ne 374 and U_Severidad eq null and U_CreateUser eq '{username}'"
+            filtro = f"Series ne 374 and CallType ne 24 and CallType ne 28 and CallType ne 27 and U_CreateUser eq '{username}'"
 
         filtro_codificado = quote(filtro)
 
