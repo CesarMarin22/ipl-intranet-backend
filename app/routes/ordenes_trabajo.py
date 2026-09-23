@@ -1,3 +1,4 @@
+# RECOMPILE_FORCE: 2026-09-23T23:50:00 - Added severidades endpoint and perfil-based filtering
 import os
 import csv
 import sqlite3
@@ -17,6 +18,28 @@ SAP_COMPANYDB = os.getenv("SAP_COMPANYDB", "B1_IPL")
 SAP_USERNAME = os.getenv("SAP_USERNAME", "manager")
 SAP_PASSWORD = os.getenv("SAP_PASSWORD", "")
 CSV_OUTPUT_DIR = os.getenv("CSV_OUTPUT_DIR", r"C:\Publish\addonServicioweb")
+
+# SEVERIDAD_INFO from OTA - Severidades por CallType
+SEVERIDAD_INFO = {
+    "Menor": ("Menor", "#00b050", "#ffffff"),
+    "Moderada": ("Moderada", "#ffff00", "#111111"),
+    "Critica": ("Crítica", "#ffc000", "#111111"),
+    "Fatal": ("Fatal", "#ff0000", "#ffffff"),
+    "CriticaO": ("Crítica (Operación)", "#ff0000", "#ffffff"),
+    "Alto": ("Alto (Operación)", "#ffc000", "#111111"),
+    "ModeradaO": ("Moderada (Operación)", "#ffff00", "#111111"),
+    "Bajo": ("Bajo (Operación)", "#00b050", "#ffffff"),
+    "CriticaV": ("Crítica (Vehículos)", "#ff0000", "#ffffff"),
+    "ModeradaV": ("Moderada (Vehículos)", "#ffc000", "#111111"),
+    "MenorV": ("Menor (Vehículos)", "#00b050", "#ffffff"),
+}
+
+# Perfil -> (CallType, nombre de problema) - REPLICATED FROM OTA
+PERFIL_FILTROS_FLASH = {
+    4: {"call_type_id": 24, "nombre_problema": "Seguridad"},  # Perfil SEGURIDAD
+    6: {"call_type_id": 28, "nombre_problema": "Operación"},  # Perfil CALIDAD
+    7: {"call_type_id": 27, "nombre_problema": "Vehículos"},  # Perfil LEGAL
+}
 
 
 def limpiar_texto(texto: str) -> str:
@@ -295,6 +318,10 @@ def buscar_cssrs():
 @ordenes_trabajo_bp.route("/flash-reports", methods=["GET"])
 def listar_flash_reports():
     """Lista todas las OT de seguridad (Flash Reports) del usuario"""
+    # WRITE DEBUG LOG
+    with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+        f.write(f"\n=== {datetime.now().isoformat()} ===\n")
+
     valid, response = validate_active_session()
     if not valid:
         return response
@@ -304,34 +331,31 @@ def listar_flash_reports():
         return response
 
     username = session.get("username", "")
-    perfil = session.get("perfil")
+    perfil = session.get("perfil_id")  # FIXED: Changed from "perfil" to "perfil_id"
     page = int(request.args.get("page", 1))
-    per_page = 10
+    per_page = 999
 
-    # DEBUG: imprimir en logs
-    print(f"🔥 DEBUG FLASH-REPORTS: perfil={perfil}, username={username}, page={page}")
+    # DEBUG: escribir en archivo de log
+    with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+        f.write(f"INICIO: perfil_id={perfil}, username={username}, page={page}, per_page={per_page}\n")
 
     try:
         skip = (page - 1) * per_page
         top = per_page
 
-        # Lógica de OTA
-        PERFIL_FILTROS_FLASH = {
-            4: {"call_type_id": 24},
-            6: {"call_type_id": 28},
-            7: {"call_type_id": 27},
-        }
-
-        # Admin ve TODOS los Flash Reports, otros ven solo su tipo
-        # TEST: cambiar a CallType para ver si es un problema de U_Severidad
-        if perfil == 1:  # Admin
-            filtro = "CallType eq 24 or CallType eq 28 or CallType eq 27"
-            print(f"🔥 DEBUG: usando filtro CallType para Admin: {filtro}")
+        # Flash Reports se identifican por U_Severidad ne null
+        # REPLICATING OTA LOGIC:
+        # - Admin (1): Ve TODOS los Flash Reports
+        # - Seguridad (4): Ve CallType=24
+        # - Calidad (6): Ve CallType=28
+        # - Legal (7): Ve CallType=27
+        if perfil == 1:  # Admin - ve todos
+            filtro = "U_Severidad ne null"
         elif perfil in PERFIL_FILTROS_FLASH:
             call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
             filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
         else:
-            # Si no es Admin ni tiene perfil de Flash Report, retornar vacío
+            # Si no tiene permiso de Flash Report, retornar vacío
             return ok_response({
                 "llamadas": [],
                 "page": page,
@@ -353,7 +377,15 @@ def listar_flash_reports():
             f"&$inlinecount=allpages"
         )
 
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"SAP URL: {url}\n")
+
         data = sap_get(url)
+
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            total = data.get('odata.count', 0) if data else "NO DATA"
+            items = len(data.get('value', [])) if data and 'value' in data else "NO VALUE"
+            f.write(f"SAP RESPONSE: total={total}, items={items}, data_keys={list(data.keys()) if data else 'None'}\n")
 
         total_registros = int(data.get("odata.count", 0))
         llamadas = data.get("value", [])
@@ -369,6 +401,9 @@ def listar_flash_reports():
 
         total_paginas = ((total_registros + per_page - 1) // per_page) if total_registros else 1
 
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"RETURNING: total_registros={total_registros}, llamadas_count={len(llamadas)}, total_paginas={total_paginas}\n")
+
         return ok_response(
             {
                 "llamadas": llamadas,
@@ -381,6 +416,11 @@ def listar_flash_reports():
         )
 
     except Exception as e:
+        with open(r"C:\websites\IPL_API\logs\flash_reports_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"ERROR: {type(e).__name__}: {str(e)}\n")
+            import traceback
+            f.write(traceback.format_exc() + "\n")
+
         return ok_response({
             "llamadas": [],
             "page": page,
@@ -404,7 +444,7 @@ def listar_ot_audi():
         return response
 
     username = session.get("username", "")
-    perfil = session.get("perfil")
+    perfil = session.get("perfil_id")  # FIXED: Changed from "perfil" to "perfil_id"
     page = int(request.args.get("page", 1))
     per_page = 10
 
@@ -412,7 +452,7 @@ def listar_ot_audi():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Admin (perfil 1): Ve TODAS las OT Audi
+        # Admin (perfil_id 1): Ve TODAS las OT Audi
         # Otros: Solo las que creó
         if perfil == 1:
             filtro = "Series eq 374"
@@ -469,7 +509,7 @@ def listar_ot_normal():
         return response
 
     username = session.get("username", "")
-    perfil = session.get("perfil")
+    perfil = session.get("perfil_id")  # FIXED: Changed from "perfil" to "perfil_id"
     page = int(request.args.get("page", 1))
     per_page = 10
 
@@ -556,7 +596,35 @@ def tipos_problema():
         return ok_response({"value": all_tipos})
     except Exception as e:
         return error_response(f"Error al consultar tipos problema SAP: {str(e)}", 500)
-    
+
+@ordenes_trabajo_bp.route("/severidades", methods=["GET"])
+def obtener_severidades():
+    """Retorna las opciones de severidad según el CallType"""
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    call_type = request.args.get("call_type", "24")  # Default: Seguridad
+
+    # Filtrar severidades según el CallType
+    severidades_filtradas = {}
+    if call_type == "24":  # Seguridad
+        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if not any(x in k for x in ["O", "V"])}
+    elif call_type == "28":  # Operación (Calidad)
+        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if "O" in k or k in ["Moderada", "Critica", "Fatal"]}
+    elif call_type == "27":  # Vehículos (Legal)
+        severidades_filtradas = {k: v for k, v in SEVERIDAD_INFO.items() if "V" in k or k in ["Critica"]}
+    else:
+        severidades_filtradas = SEVERIDAD_INFO
+
+    # Retornar en formato para select
+    opciones = [
+        {"code": code, "label": SEVERIDAD_INFO[code][0], "color": SEVERIDAD_INFO[code][1]}
+        for code in severidades_filtradas.keys()
+    ]
+
+    return ok_response({"opciones": opciones})
+
 @ordenes_trabajo_bp.route("/guardar-csv", methods=["POST"])
 def guardar_csv():
     valid, response = validate_active_session()
@@ -569,8 +637,8 @@ def guardar_csv():
 
     if tipo == "seguridad":
         module_name = "OT_SEGURIDAD"
-        # Flash Report: solo perfil 1 (Admin) o 4 (Seguridad) pueden crear
-        perfil = session.get("perfil")
+        # Flash Report: solo perfil_id 1 (Admin) o 4 (Seguridad) pueden crear
+        perfil = session.get("perfil_id")  # FIXED: Changed from "perfil" to "perfil_id"
         if perfil not in [1, 4]:
             return error_response("Solo Seguridad (perfil 4) puede crear Flash Reports", 403)
     elif tipo == "audi":
@@ -1090,7 +1158,7 @@ def ver_orden_trabajo(docnum):
         # Validar si puede dar seguimiento (solo para Flash Reports)
         puede_seguimiento = (
             tipo_vista == "seguridad"
-            and perfil_puede_dar_seguimiento(session.get("perfil"), call_type_id)
+            and perfil_puede_dar_seguimiento(session.get("perfil_id"), call_type_id)  # FIXED
         )
 
         return ok_response(
@@ -1164,7 +1232,7 @@ def guardar_seguimiento(docnum):
 
         # Validar permisos según el CallType
         call_type_id = ot.get("CallType")
-        if not perfil_puede_dar_seguimiento(session.get("perfil"), call_type_id):
+        if not perfil_puede_dar_seguimiento(session.get("perfil_id"), call_type_id):  # FIXED
             return error_response("No tiene permiso para dar seguimiento a esta OT", 403)
 
         # Guardar en base de datos
