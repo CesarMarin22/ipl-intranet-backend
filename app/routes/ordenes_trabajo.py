@@ -337,16 +337,20 @@ def listar_flash_reports():
                 "total_paginas": 1,
             })
 
-        filtro_codificado = quote(filtro)
+        # Construir URL sin incluir $filter si está vacío
+        url = "ServiceCalls?"
+        if filtro:
+            filtro_codificado = quote(filtro)
+            url += f"$filter={filtro_codificado}&"
 
-        data = sap_get(
-            f"ServiceCalls?"
-            f"$filter={filtro_codificado}"
-            f"&$orderby=AssignedDate desc"
+        url += (
+            f"$orderby=AssignedDate desc"
             f"&$skip={skip}&$top={top}"
             f"&$select=DocNum,CustomerRefNo,CustomerName,ManufacturerSerialNum,AssignedDate,Series,U_Severidad,U_CreateUser"
             f"&$inlinecount=allpages"
         )
+
+        data = sap_get(url)
 
         total_registros = int(data.get("odata.count", 0))
         llamadas = data.get("value", [])
