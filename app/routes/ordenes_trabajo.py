@@ -312,15 +312,21 @@ def listar_flash_reports():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Lógica de OTA: solo perfiles 4, 6, 7 ven Flash Reports de su tipo
+        # Lógica de OTA
         PERFIL_FILTROS_FLASH = {
             4: {"call_type_id": 24},
             6: {"call_type_id": 28},
             7: {"call_type_id": 27},
         }
 
-        if perfil not in PERFIL_FILTROS_FLASH:
-            # Si no es un perfil de Flash Report, retornar vacío
+        # Admin ve TODOS los Flash Reports, otros ven solo su tipo
+        if perfil == 1:  # Admin
+            filtro = "U_Severidad ne null"
+        elif perfil in PERFIL_FILTROS_FLASH:
+            call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
+            filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
+        else:
+            # Si no es Admin ni tiene perfil de Flash Report, retornar vacío
             return ok_response({
                 "llamadas": [],
                 "page": page,
@@ -328,10 +334,6 @@ def listar_flash_reports():
                 "total_registros": 0,
                 "total_paginas": 1,
             })
-
-        # Filtro: Flash Reports de su tipo que tengan U_Severidad
-        call_type_id = PERFIL_FILTROS_FLASH[perfil]['call_type_id']
-        filtro = f"U_Severidad ne null and CallType eq {call_type_id}"
 
         # Construir URL sin incluir $filter si está vacío
         url = "ServiceCalls?"
