@@ -376,12 +376,7 @@ def listar_flash_reports():
                 "per_page": per_page,
                 "total_registros": total_registros,
                 "total_paginas": total_paginas,
-                "_debug": {
-                    "perfil": perfil,
-                    "username": username,
-                    "filtro_usado": filtro,
-                    "url_sap": url,
-                }
+                "CODIGO_ACTUALIZADO": "ARCHIVO CAMBIO CORRECTAMENTE - " + str(datetime.now()),
             }
         )
 
