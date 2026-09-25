@@ -662,20 +662,24 @@ def tipos_problema():
     if not valid:
         return response
 
-    allowed, response = require_any_permission(["OT_NORMAL", "OT_SEGURIDAD"], "VER")
+    allowed, response = require_any_permission(["OT_NORMAL", "OT_AUDI", "OT_SEGURIDAD"], "VER")
     if not allowed:
         return response
 
-    # REPLICATE EXACTLY FROM OTA - Return ALL problem types, let frontend filter
-    # OTA's endpoint returns all, then javascript filters by IDs
-    tipos_todos = [
-        {"ProblemTypeID": 30, "Name": "SEGURIDAD"},
-        {"ProblemTypeID": 202, "Name": "OPERACIÓN"},
-        {"ProblemTypeID": 203, "Name": "VEHÍCULOS"},
-        # Add more if needed, but for Flash Reports only these 3 are used
-    ]
-
-    return ok_response({"value": tipos_todos})
+    # Same as OTA: every active type; each form filters its own IDs (Audi and Flash Report use subsets)
+    try:
+        data = sap_get(
+            "ServiceCallProblemTypes?$filter=Active eq 'Y'&$orderby=Name asc&$select=ProblemTypeID,Name"
+        )
+        tipos = data.get("value", [])
+        next_link = data.get("odata.nextLink")
+        while next_link:
+            data = sap_get(next_link)
+            tipos += data.get("value", [])
+            next_link = data.get("odata.nextLink")
+        return ok_response({"value": tipos})
+    except Exception as e:
+        return error_response(f"Error al consultar tipos de problema SAP: {str(e)}", 500)
 
 @ordenes_trabajo_bp.route("/severidades", methods=["GET"])
 def obtener_severidades():
