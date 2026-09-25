@@ -83,6 +83,20 @@ def perfil_puede_dar_seguimiento(call_type_id):
     return bool(area) and area["call_type_id"] == call_type_id
 
 
+def puede_ver_registro(ot):
+    """Detail access mirrors the dashboard lists; VER_OT stays as a see-everything override."""
+    if require_permission("VER_OT", "VER")[0]:
+        return True
+    if ot.get("U_Severidad"):
+        return require_permission("OT_SEGURIDAD", "VER")[0] and flash_visible_para_usuario(ot)
+
+    modulo = "OT_AUDI" if int(ot.get("Series") or 0) == 374 else "OT_NORMAL"
+    if not require_permission(modulo, "VER")[0]:
+        return False
+    es_propia = str(ot.get("U_CreateUser", "")).upper() == str(session.get("username", "")).upper()
+    return session.get("perfil_id") == PERFIL_ADMIN or es_propia
+
+
 def require_any_permission(module_codes, action_code):
     for module_code in module_codes:
         allowed, response = require_permission(module_code, action_code)
@@ -1162,11 +1176,6 @@ def ver_orden_trabajo(docnum):
     if not valid:
         return response
 
-    puede_ver_ot, denied_response = require_permission("VER_OT", "VER")
-    puede_ver_flash, _ = require_permission("OT_SEGURIDAD", "VER")
-    if not puede_ver_ot and not puede_ver_flash:
-        return denied_response
-
     try:
         data = sap_get(
             f"ServiceCalls?$filter=DocNum eq {docnum}"
@@ -1179,9 +1188,8 @@ def ver_orden_trabajo(docnum):
 
         ot = rows[0]
 
-        # Without VER_OT, only Flash Reports the user is allowed to see (own or of their area)
-        if not puede_ver_ot and not (ot.get("U_Severidad") and flash_visible_para_usuario(ot)):
-            return denied_response or error_response("No autorizado", 403)
+        if not puede_ver_registro(ot):
+            return error_response("No autorizado", 403)
 
         call_type_id = ot.get("CallType")
         series_id = ot.get("Series")
