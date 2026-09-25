@@ -3,7 +3,7 @@ import os
 import csv
 import sqlite3
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import quote
 
 import requests
@@ -121,9 +121,65 @@ def limpiar_texto(texto: str) -> str:
     texto = texto.replace("ñ", "n").replace("Ñ", "N")
     texto = texto.replace(",", ".")
     texto = texto.replace(";", ".")
+    # Quotes get escaped by the csv writer and DataTransfer does not always read them back correctly
+    texto = texto.replace('"', "")
     texto = " ".join(texto.split())
 
     return texto.upper()
+
+
+def _normalizar_fecha(valor):
+    """Accepts yyyy-mm-dd, yyyymmdd or dd/mm/yyyy and returns a datetime.date (None if empty/invalid)."""
+    valor = str(valor or "").strip()
+    for formato in ("%Y-%m-%d", "%Y%m%d", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(valor, formato).date()
+        except ValueError:
+            continue
+    return None
+
+
+def validar_fechas_csv(datos, tipo):
+    """
+    Returns (fecha_inicio, fecha_termino, error) with dates as yyyymmdd.
+    Same rules as the forms: valid date, current or previous year, not in the future,
+    and end not before start. Audi "ingreso" captures only the start date.
+    """
+    ahora = datetime.now()
+    tolerancia = timedelta(minutes=10)
+
+    def combinar(campo_fecha, campo_hora, nombre):
+        texto_fecha = str(datos.get(campo_fecha, "") or "").strip()
+        texto_hora = str(datos.get(campo_hora, "") or "").strip()
+        if not texto_fecha:
+            return None, f"Falta la fecha de {nombre}."
+        fecha = _normalizar_fecha(texto_fecha)
+        if not fecha:
+            return None, f"La fecha de {nombre} ({texto_fecha}) no es válida."
+        if fecha.year < ahora.year - 1 or fecha.year > ahora.year:
+            return None, f"El año de la fecha de {nombre} ({fecha.year}) no es válido."
+        try:
+            hora = datetime.strptime(texto_hora[:5], "%H:%M").time()
+        except ValueError:
+            return None, f"La hora de {nombre} no es válida."
+        momento = datetime.combine(fecha, hora)
+        if momento > ahora + tolerancia:
+            return None, f"La fecha y hora de {nombre} no pueden ser futuras."
+        return momento, None
+
+    inicio, error = combinar("fechaInicio", "horaInicioTrabajo", "inicio")
+    if error:
+        return None, None, error
+
+    termino = None
+    if tipo != "seguridad" and (datos.get("fechaTermino") or tipo != "audi"):
+        termino, error = combinar("fechaTermino", "horaSalida", "término")
+        if error:
+            return None, None, error
+        if termino < inicio:
+            return None, None, "La fecha y hora de término no pueden ser menores que la fecha y hora de inicio."
+
+    return inicio.strftime("%Y%m%d"), termino.strftime("%Y%m%d") if termino else "", None
 
 
 def sap_login():
@@ -675,6 +731,11 @@ def guardar_csv():
     if not allowed:
         return response
 
+    # A wrong date makes DataTransfer reject the file, so nothing is written unless dates are valid
+    fecha_inicio_csv, fecha_termino_csv, error_fechas = validar_fechas_csv(datos, tipo)
+    if error_fechas:
+        return error_response(error_fechas, 400)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tipo = datos.get("data-tipo", "") or datos.get("tipo", "")
 
@@ -752,16 +813,16 @@ def guardar_csv():
             datos.get("tipoOrden", "") or datos.get("callType", ""),
             limpiar_texto(datos.get("tipoProblema", "")),
             "1",
-            datos.get("fechaInicio", "").replace("/", ""),
+            fecha_inicio_csv,
             datos.get("horaInicioTrabajo", "").replace(":", ""),
             datos.get("realizoTrabajoEmployeeID", ""),
             limpiar_texto(datos.get("trabajoRealizado", "")),
             datos.get("serie", ""),
-            datos.get("fechaInicio", "").replace("/", ""),
+            fecha_inicio_csv,
             datos.get("horaInicioTrabajo", "").replace(":", ""),
-            datos.get("fechaTermino", "").replace("/", ""),
+            fecha_termino_csv,
             datos.get("horaSalida", "").replace(":", ""),
-            datos.get("folio", ""),
+            limpiar_texto(datos.get("folio", "")),
             datos.get("itemCode", ""),
             datos.get("noSerie", ""),
             datos.get("horometro", ""),
@@ -777,14 +838,14 @@ def guardar_csv():
             tipo_refacciones,
         ] + refacciones_instaladas + refacciones_requeridas + [
             "1",
-            datos.get("nombreCssr", ""),
+            limpiar_texto(datos.get("nombreCssr", "")),
             datos.get("U_Severidad", ""),
             limpiar_texto(datos.get("areaTrabajo", "")),
             limpiar_texto(datos.get("accionesSituacion", "")),
             limpiar_texto(datos.get("planAccion", "")),
             limpiar_texto(datos.get("leccionesAprendidas", "")),
             datos.get("costoAproximado", ""),
-            datos.get("vistoBuenoCliente", ""),
+            limpiar_texto(datos.get("vistoBuenoCliente", "")),
             datos.get("U_A_Orden", ""),
             datos.get("NumPersonas", ""),
             datos.get("horasTrabajadas", ""),
