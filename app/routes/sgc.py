@@ -54,6 +54,7 @@ CRON_SECRET = os.getenv("SGC_CRON_SECRET", "")
 QUALITY_PROFILE_NAME = os.getenv("SGC_PERFIL_CALIDAD_NOMBRE", "Calidad")
 # Change description a draft carries until Calidad writes the real one when authorizing
 PENDIENTE_CALIDAD = "Pendiente de Calidad"
+REVISION_SIN_CAMBIOS = "Revisión sin cambios"
 FORMATO_TYPE_NAME = os.getenv("SGC_TIPO_FORMATO_NOMBRE", "Formato")
 
 
@@ -319,7 +320,7 @@ def _obtener_ultima_version(sgcid):
         FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" V
         LEFT JOIN "{SCHEMA}"."USUARIOS" US ON V."SUBIDO_POR" = US."USUARIOID"
         WHERE V."SGCID" = ?
-        ORDER BY V."NUMERO_VERSION" DESC
+        ORDER BY V."NUMERO_VERSION" DESC, V."VERSIONID" DESC
         """,
         [sgcid],
     )
@@ -340,7 +341,7 @@ def _obtener_versiones(sgcid):
         LEFT JOIN "{SCHEMA}"."USUARIOS" US ON V."SUBIDO_POR" = US."USUARIOID"
         LEFT JOIN "{SCHEMA}"."USUARIOS" UA ON V."AUTORIZADO_POR" = UA."USUARIOID"
         WHERE V."SGCID" = ?
-        ORDER BY V."NUMERO_VERSION" DESC
+        ORDER BY V."NUMERO_VERSION" DESC, V."VERSIONID" DESC
         """,
         [sgcid],
     )
@@ -871,22 +872,14 @@ def authorize_document_version(sgc_id, version_id):
     if not doc:
         return error_response("Documento no encontrado", 404)
 
-    # Se puede capturar/actualizar la Fecha límite en el mismo paso de
-    # autorizar, para no obligar a Calidad a ir primero a "Editar" y
-    # regresar después solo para poner una fecha.
+    # Every authorization is a review: Calidad sets the next review date (Fecha límite),
+    # which must be in the future so the document stops showing as due
     fecha_limite_form = _parse_date(request.form.get("FECHA_LIMITE"))
-    if fecha_limite_form:
-        execute_query(
-            f'UPDATE "{SCHEMA}"."SGC_DOCUMENTOS" SET "FECHA_LIMITE" = ? WHERE "SGCID" = ?',
-            [fecha_limite_form, sgc_id],
-        )
-        doc["FECHA_LIMITE"] = fecha_limite_form
-
-    if not doc.get("FECHA_LIMITE"):
+    if not fecha_limite_form:
+        return error_response("Captura la Fecha límite (la siguiente revisión del documento).", 400)
+    if fecha_limite_form <= date.today():
         return error_response(
-            "Antes de autorizar debes definir la Fecha límite del documento "
-            "(edítalo y captúrala primero).",
-            400,
+            "La Fecha límite debe ser posterior a hoy: es la fecha de la siguiente revisión.", 400
         )
 
     es_formato = _es_tipo_formato(doc.get("TIPO_DOCUMENTO"))
@@ -901,38 +894,52 @@ def authorize_document_version(sgc_id, version_id):
         return error_response("Esta versión ya fue procesada", 409)
 
     # Only Calidad defines the version number and the change (control de cambios)
-    try:
-        numero_version = int(str(request.form.get("NUMERO_VERSION") or "").strip())
-    except ValueError:
-        numero_version = 0
-    if numero_version <= 0:
-        return error_response("Captura el número de versión (un número entero mayor a 0).", 400)
-
-    descripcion_cambio = (request.form.get("DESCRIPCION_CAMBIO") or "").strip()
-    if not descripcion_cambio:
-        return error_response("Captura la descripción del cambio de esta versión.", 400)
-    if len(descripcion_cambio) > 500:
-        return error_response("La descripción del cambio no puede exceder 500 caracteres.", 400)
-
-    repetida = fetch_one(
-        f'SELECT 1 AS "X" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
-        f'WHERE "SGCID" = ? AND "NUMERO_VERSION" = ? AND "VERSIONID" <> ?',
-        [sgc_id, numero_version, version_id],
-    )
-    if repetida:
-        return error_response(f"El documento ya tiene una versión {numero_version}. Usa otro número.", 400)
-
-    # The latest version is identified by the highest number, so a new one must go above the current one
     vigente = fetch_one(
         f'SELECT MAX("NUMERO_VERSION") AS "N" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
         f"WHERE \"SGCID\" = ? AND \"ESTADO\" = 'AUTORIZADO' AND \"VERSIONID\" <> ?",
         [sgc_id, version_id],
     )
     version_vigente = int((vigente or {}).get("N") or 0)
-    if numero_version <= version_vigente:
-        return error_response(
-            f"El número de versión debe ser mayor que la versión vigente ({version_vigente}).", 400
+
+    descripcion_cambio = (request.form.get("DESCRIPCION_CAMBIO") or "").strip()
+    if len(descripcion_cambio) > 500:
+        return error_response("La descripción del cambio no puede exceder 500 caracteres.", 400)
+
+    sin_cambios = request.form.get("SIN_CAMBIOS") == "1"
+    if sin_cambios:
+        # Periodic review with no changes: same version number, recorded as its own history entry
+        if not version_vigente:
+            return error_response(
+                "La revisión sin cambios requiere una versión autorizada previa; autoriza este documento como nueva versión.",
+                400,
+            )
+        numero_version = version_vigente
+        descripcion_cambio = descripcion_cambio or REVISION_SIN_CAMBIOS
+    else:
+        try:
+            numero_version = int(str(request.form.get("NUMERO_VERSION") or "").strip())
+        except ValueError:
+            numero_version = 0
+        if numero_version <= 0:
+            return error_response("Captura el número de versión (un número entero mayor a 0).", 400)
+        if not descripcion_cambio:
+            return error_response("Captura la descripción del cambio de esta versión.", 400)
+
+        repetida = fetch_one(
+            f'SELECT 1 AS "X" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
+            f'WHERE "SGCID" = ? AND "NUMERO_VERSION" = ? AND "VERSIONID" <> ?',
+            [sgc_id, numero_version, version_id],
         )
+        if repetida:
+            return error_response(f"El documento ya tiene una versión {numero_version}. Usa otro número.", 400)
+
+        # The latest version is identified by the highest number, so a new one must go above the current one
+        if numero_version <= version_vigente:
+            return error_response(
+                f"El número de versión debe ser mayor que la versión vigente ({version_vigente}). "
+                "Si el documento no cambió, marca la opción Revisión sin cambios.",
+                400,
+            )
 
     uploaded_file = request.files.get("file")
     uploaded_pdf = request.files.get("pdf")
@@ -1012,9 +1019,11 @@ def authorize_document_version(sgc_id, version_id):
         [viewer["USUARIOID"], numero_version, descripcion_cambio, version_id],
     )
 
+    # Authorizing is a review: today becomes the last review date and the next one is the new Fecha límite
     execute_query(
-        f'UPDATE "{SCHEMA}"."SGC_DOCUMENTOS" SET "VERSION_ACTIVA_ID" = ? WHERE "SGCID" = ?',
-        [version_id, sgc_id],
+        f'UPDATE "{SCHEMA}"."SGC_DOCUMENTOS" SET "VERSION_ACTIVA_ID" = ?, "FECHA_LIMITE" = ?, '
+        f'"FECHA_ULTIMA_REVISION" = CURRENT_DATE WHERE "SGCID" = ?',
+        [version_id, fecha_limite_form, sgc_id],
     )
 
     version_anterior_id = doc.get("VERSION_ACTIVA_ID")
