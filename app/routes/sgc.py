@@ -55,6 +55,16 @@ QUALITY_PROFILE_NAME = os.getenv("SGC_PERFIL_CALIDAD_NOMBRE", "Calidad")
 # Change description a draft carries until Calidad writes the real one when authorizing
 PENDIENTE_CALIDAD = "Pendiente de Calidad"
 REVISION_SIN_CAMBIOS = "Revisión sin cambios"
+
+
+def _descripcion_revision(notas):
+    """Review entries always start with REVISION_SIN_CAMBIOS so the history can tag them."""
+    notas = (notas or "").strip()
+    if not notas or notas == REVISION_SIN_CAMBIOS:
+        return REVISION_SIN_CAMBIOS
+    if notas.startswith(REVISION_SIN_CAMBIOS):
+        return notas[:500]
+    return f"{REVISION_SIN_CAMBIOS}: {notas}"[:500]
 FORMATO_TYPE_NAME = os.getenv("SGC_TIPO_FORMATO_NOMBRE", "Formato")
 
 
@@ -906,20 +916,31 @@ def authorize_document_version(sgc_id, version_id):
         return error_response("La descripción del cambio no puede exceder 500 caracteres.", 400)
 
     sin_cambios = request.form.get("SIN_CAMBIOS") == "1"
-    if sin_cambios:
+    try:
+        numero_capturado = int(str(request.form.get("NUMERO_VERSION") or "").strip())
+    except ValueError:
+        numero_capturado = 0
+
+    if sin_cambios and version_vigente:
         # Periodic review with no changes: same version number, recorded as its own history entry
-        if not version_vigente:
-            return error_response(
-                "La revisión sin cambios requiere una versión autorizada previa; autoriza este documento como nueva versión.",
-                400,
-            )
         numero_version = version_vigente
-        descripcion_cambio = descripcion_cambio or REVISION_SIN_CAMBIOS
+        descripcion_cambio = _descripcion_revision(descripcion_cambio)
+    elif sin_cambios:
+        # No authorized version yet (e.g. a document coming from paper already at revision N):
+        # Calidad states which version was reviewed
+        if numero_capturado <= 0:
+            return error_response("Captura el número de versión que se revisó (un número entero mayor a 0).", 400)
+        repetida = fetch_one(
+            f'SELECT 1 AS "X" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
+            f'WHERE "SGCID" = ? AND "NUMERO_VERSION" = ? AND "VERSIONID" <> ?',
+            [sgc_id, numero_capturado, version_id],
+        )
+        if repetida:
+            return error_response(f"El documento ya tiene una versión {numero_capturado}. Usa otro número.", 400)
+        numero_version = numero_capturado
+        descripcion_cambio = _descripcion_revision(descripcion_cambio)
     else:
-        try:
-            numero_version = int(str(request.form.get("NUMERO_VERSION") or "").strip())
-        except ValueError:
-            numero_version = 0
+        numero_version = numero_capturado
         if numero_version <= 0:
             return error_response("Captura el número de versión (un número entero mayor a 0).", 400)
         if not descripcion_cambio:
