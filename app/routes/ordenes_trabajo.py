@@ -817,7 +817,7 @@ def guardar_csv():
 
         fila_datos = [
             1,
-            limpiar_texto(datos.get("descripcionFalla", "")),
+            limpiar_texto(datos.get("descripcionFalla", ""))[:254],  # SAP Subject holds 254 characters
             datos.get("codigoCliente", ""),
             datos.get("tipoOrden", "") or datos.get("callType", ""),
             limpiar_texto(datos.get("tipoProblema", "")),
