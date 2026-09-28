@@ -43,6 +43,10 @@ AREAS_FLASH = {
     12: {"call_type_id": 27, "problem_type_id": 203},  # LEGAL
 }
 PERFIL_ADMIN = 1
+
+SERIE_AUDI = 374
+CLIENTE_AUDI = "C00133"  # AUDI MEXICO
+FILTRO_AUDI = f"U_Severidad eq null and Series eq {SERIE_AUDI} and CustomerCode eq '{CLIENTE_AUDI}'"
 # "Abierto" is the implicit state of a Flash Report without follow-ups, so it is not selectable
 ESTATUS_SEGUIMIENTO = ("En Proceso", "Cerrado")
 
@@ -90,7 +94,8 @@ def puede_ver_registro(ot):
     if ot.get("U_Severidad"):
         return require_permission("OT_SEGURIDAD", "VER")[0] and flash_visible_para_usuario(ot)
 
-    modulo = "OT_AUDI" if int(ot.get("Series") or 0) == 374 else "OT_NORMAL"
+    es_audi = int(ot.get("Series") or 0) == SERIE_AUDI and ot.get("CustomerCode") == CLIENTE_AUDI
+    modulo = "OT_AUDI" if es_audi else "OT_NORMAL"
     if not require_permission(modulo, "VER")[0]:
         return False
     es_propia = str(ot.get("U_CreateUser", "")).upper() == str(session.get("username", "")).upper()
@@ -544,12 +549,14 @@ def listar_ot_audi():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Admin (perfil_id 1): Ve TODAS las OT Audi
-        # Otros: Solo las que creó
-        if perfil == 1:
-            filtro = "Series eq 374"
-        else:
-            filtro = f"Series eq 374 and U_CreateUser eq '{username}'"
+        # As in OTA an OT is Audi only when it is AUDI MEXICO in serie 374; other Puebla orders are normal OTs.
+        # Admin sees all, everyone else only their own. Optional tipo_ot: B = ingreso, N = reporte.
+        filtro = FILTRO_AUDI
+        if perfil != 1:
+            filtro += f" and U_CreateUser eq '{str(username).replace(chr(39), chr(39) * 2)}'"
+        tipo_ot = request.args.get("tipo_ot", "")
+        if tipo_ot in ("B", "N"):
+            filtro += f" and U_A_TipoOT eq '{tipo_ot}'"
 
         filtro_codificado = quote(filtro)
 
@@ -609,13 +616,11 @@ def listar_ot_normal():
         skip = (page - 1) * per_page
         top = per_page
 
-        # Lógica de OTA: OT Normal = Series ne 374 (excluir Audi) y U_Severidad eq null (excluir Flash Reports)
-        # Admin ve todas sus OT + Flash Reports (en endpoint separado)
-        # Otros ven solo sus OT creadas
-        if perfil == 1:
-            filtro = "Series ne 374 and U_Severidad eq null"
-        else:
-            filtro = f"Series ne 374 and U_Severidad eq null and U_CreateUser eq '{username}'"
+        # Normal OT = not a Flash Report and not Audi (Puebla orders for other clients are normal OTs, as in OTA).
+        # Admin sees all, everyone else only their own.
+        filtro = f"U_Severidad eq null and (Series ne {SERIE_AUDI} or CustomerCode ne '{CLIENTE_AUDI}')"
+        if perfil != 1:
+            filtro += f" and U_CreateUser eq '{str(username).replace(chr(39), chr(39) * 2)}'"
 
         filtro_codificado = quote(filtro)
 
