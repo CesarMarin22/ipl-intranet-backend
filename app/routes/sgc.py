@@ -52,6 +52,8 @@ DIAS_URGENTE = int(os.getenv("SGC_DIAS_URGENTE", "3"))
 DIAS_PROXIMO = int(os.getenv("SGC_DIAS_PROXIMO", "7"))
 CRON_SECRET = os.getenv("SGC_CRON_SECRET", "")
 QUALITY_PROFILE_NAME = os.getenv("SGC_PERFIL_CALIDAD_NOMBRE", "Calidad")
+# Change description a draft carries until Calidad writes the real one when authorizing
+PENDIENTE_CALIDAD = "Pendiente de Calidad"
 FORMATO_TYPE_NAME = os.getenv("SGC_TIPO_FORMATO_NOMBRE", "Formato")
 
 
@@ -755,7 +757,7 @@ def create_document():
             stored_name,
             original_name,
             current_user_id(),
-            "Creación del documento",
+            PENDIENTE_CALIDAD,
         ],
     )
 
@@ -814,14 +816,8 @@ def create_document_version(sgc_id):
     if not stored_name:
         return error_response("Debes adjuntar el archivo de la nueva versión", 400)
 
-    descripcion_cambio = (request.form.get("DESCRIPCION_CAMBIO") or "").strip()
-    if not descripcion_cambio:
-        return error_response(
-            "Debes describir brevemente qué cambió respecto a la versión anterior "
-            "(tu Control de Cambios lo exige).",
-            400,
-        )
-
+    # Version number and change description are set by Calidad when authorizing;
+    # until then the draft carries a provisional number
     siguiente_numero = (ultima.get("NUMERO_VERSION") + 1) if ultima else 1
     version_id = get_next_id("SGC_DOCUMENTOS_VERSIONES", "VERSIONID")
 
@@ -838,7 +834,7 @@ def create_document_version(sgc_id):
             stored_name,
             original_name,
             viewer_id,
-            descripcion_cambio,
+            PENDIENTE_CALIDAD,
         ],
     )
 
@@ -903,6 +899,40 @@ def authorize_document_version(sgc_id, version_id):
         return error_response("Versión no encontrada", 404)
     if version.get("ESTADO") != "BORRADOR":
         return error_response("Esta versión ya fue procesada", 409)
+
+    # Only Calidad defines the version number and the change (control de cambios)
+    try:
+        numero_version = int(str(request.form.get("NUMERO_VERSION") or "").strip())
+    except ValueError:
+        numero_version = 0
+    if numero_version <= 0:
+        return error_response("Captura el número de versión (un número entero mayor a 0).", 400)
+
+    descripcion_cambio = (request.form.get("DESCRIPCION_CAMBIO") or "").strip()
+    if not descripcion_cambio:
+        return error_response("Captura la descripción del cambio de esta versión.", 400)
+    if len(descripcion_cambio) > 500:
+        return error_response("La descripción del cambio no puede exceder 500 caracteres.", 400)
+
+    repetida = fetch_one(
+        f'SELECT 1 AS "X" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
+        f'WHERE "SGCID" = ? AND "NUMERO_VERSION" = ? AND "VERSIONID" <> ?',
+        [sgc_id, numero_version, version_id],
+    )
+    if repetida:
+        return error_response(f"El documento ya tiene una versión {numero_version}. Usa otro número.", 400)
+
+    # The latest version is identified by the highest number, so a new one must go above the current one
+    vigente = fetch_one(
+        f'SELECT MAX("NUMERO_VERSION") AS "N" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
+        f"WHERE \"SGCID\" = ? AND \"ESTADO\" = 'AUTORIZADO' AND \"VERSIONID\" <> ?",
+        [sgc_id, version_id],
+    )
+    version_vigente = int((vigente or {}).get("N") or 0)
+    if numero_version <= version_vigente:
+        return error_response(
+            f"El número de versión debe ser mayor que la versión vigente ({version_vigente}).", 400
+        )
 
     uploaded_file = request.files.get("file")
     uploaded_pdf = request.files.get("pdf")
@@ -975,10 +1005,11 @@ def authorize_document_version(sgc_id, version_id):
     execute_query(
         f"""
         UPDATE "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES"
-        SET "ESTADO" = 'AUTORIZADO', "FECHA_AUTORIZACION" = CURRENT_TIMESTAMP, "AUTORIZADO_POR" = ?
+        SET "ESTADO" = 'AUTORIZADO', "FECHA_AUTORIZACION" = CURRENT_TIMESTAMP, "AUTORIZADO_POR" = ?,
+            "NUMERO_VERSION" = ?, "DESCRIPCION_CAMBIO" = ?
         WHERE "VERSIONID" = ?
         """,
-        [viewer["USUARIOID"], version_id],
+        [viewer["USUARIOID"], numero_version, descripcion_cambio, version_id],
     )
 
     execute_query(
