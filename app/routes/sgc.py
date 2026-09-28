@@ -909,7 +909,9 @@ def authorize_document_version(sgc_id, version_id):
         f"WHERE \"SGCID\" = ? AND \"ESTADO\" = 'AUTORIZADO' AND \"VERSIONID\" <> ?",
         [sgc_id, version_id],
     )
-    version_vigente = int((vigente or {}).get("N") or 0)
+    # None when nothing is authorized yet; 0 is a valid version number
+    maximo = (vigente or {}).get("N")
+    version_vigente = int(maximo) if maximo is not None else None
 
     descripcion_cambio = (request.form.get("DESCRIPCION_CAMBIO") or "").strip()
     if len(descripcion_cambio) > 500:
@@ -919,17 +921,17 @@ def authorize_document_version(sgc_id, version_id):
     try:
         numero_capturado = int(str(request.form.get("NUMERO_VERSION") or "").strip())
     except ValueError:
-        numero_capturado = 0
+        numero_capturado = None
 
-    if sin_cambios and version_vigente:
+    if sin_cambios and version_vigente is not None:
         # Periodic review with no changes: same version number, recorded as its own history entry
         numero_version = version_vigente
         descripcion_cambio = _descripcion_revision(descripcion_cambio)
     elif sin_cambios:
         # No authorized version yet (e.g. a document coming from paper already at revision N):
         # Calidad states which version was reviewed
-        if numero_capturado <= 0:
-            return error_response("Captura el número de versión que se revisó (un número entero mayor a 0).", 400)
+        if numero_capturado is None or numero_capturado < 0:
+            return error_response("Captura el número de versión que se revisó (un número entero, 0 o mayor).", 400)
         repetida = fetch_one(
             f'SELECT 1 AS "X" FROM "{SCHEMA}"."SGC_DOCUMENTOS_VERSIONES" '
             f'WHERE "SGCID" = ? AND "NUMERO_VERSION" = ? AND "VERSIONID" <> ?',
@@ -941,8 +943,8 @@ def authorize_document_version(sgc_id, version_id):
         descripcion_cambio = _descripcion_revision(descripcion_cambio)
     else:
         numero_version = numero_capturado
-        if numero_version <= 0:
-            return error_response("Captura el número de versión (un número entero mayor a 0).", 400)
+        if numero_version is None or numero_version < 0:
+            return error_response("Captura el número de versión (un número entero, 0 o mayor).", 400)
         if not descripcion_cambio:
             return error_response("Captura la descripción del cambio de esta versión.", 400)
 
@@ -955,7 +957,7 @@ def authorize_document_version(sgc_id, version_id):
             return error_response(f"El documento ya tiene una versión {numero_version}. Usa otro número.", 400)
 
         # The latest version is identified by the highest number, so a new one must go above the current one
-        if numero_version <= version_vigente:
+        if version_vigente is not None and numero_version <= version_vigente:
             return error_response(
                 f"El número de versión debe ser mayor que la versión vigente ({version_vigente}). "
                 "Si el documento no cambió, marca la opción Revisión sin cambios.",
