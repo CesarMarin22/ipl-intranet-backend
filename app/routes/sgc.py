@@ -261,27 +261,43 @@ def _can_view_document(doc, viewer, is_quality):
 
 
 def _can_view_external_document(doc, viewer, is_quality):
+    """External documents are not authorized: Calidad sees all, everyone else only their department's."""
     if is_quality:
         return True
+    return bool(viewer) and viewer.get("DEPAID") is not None and viewer.get("DEPAID") == doc.get("DEPAID")
 
-    vis = _visibilidad_normalizada(doc.get("VISIBILIDAD"))
 
-    if vis == "publico":
-        return True
-    if vis == "interno":
-        return (
-            bool(viewer)
-            and viewer.get("SUCURSAL")
-            and viewer.get("SUCURSAL") == doc.get("SUCURSAL")
-        )
-    if vis == "confidencial":
-        return (
-            bool(viewer)
-            and viewer.get("DEPAID")
-            and viewer.get("DEPAID") == doc.get("DEPAID")
-        )
+# Whoever can see an external document can also maintain it (edit, new version, activate, delete)
+_can_manage_external_document = _can_view_external_document
 
-    return False
+
+def _leer_vigencia_externo(form):
+    """Returns (sin_caducidad, fecha_vigencia, error)."""
+    if str(form.get("SIN_CADUCIDAD") or "").strip().lower() in ("1", "true"):
+        return 1, None, None
+    fecha = _parse_date(form.get("FECHA_VIGENCIA"))
+    if not fecha:
+        return None, None, "Captura la fecha de vigencia o marca que el documento no caduca."
+    return 0, fecha, None
+
+
+def _registrar_version_externo(ext_id, edicion):
+    execute_query(
+        f'INSERT INTO "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS_HIST" ("HISTID","SGCEXTID","FECHA","EDICION","USUARIOID") '
+        f"VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)",
+        [get_next_id("SGC_DOCUMENTOS_EXTERNOS_HIST", "HISTID"), ext_id, edicion, current_user_id()],
+    )
+
+
+def _borrar_archivo(nombre):
+    if not nombre:
+        return
+    path = os.path.join(UPLOAD_DIR, nombre)
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
 
 
 # --------------------------------------------------------------------
@@ -1620,9 +1636,10 @@ def get_external_documents():
 
     rows = fetch_all(f"""
         SELECT
-            E."SGCEXTID", E."TITULO", E."ORIGEN", E."FECHA_RECEPCION",
+            E."SGCEXTID", E."TITULO", E."ORIGEN", E."FECHA_RECEPCION", E."EDICION",
+            E."FECHA_VIGENCIA", E."SIN_CADUCIDAD",
             E."ARCHIVO_NOMBRE_ORIGINAL", E."ACTIVO", E."FECHA_REGISTRO",
-            E."VISIBILIDAD", E."DEPAID", E."SUCURSAL",
+            E."DEPAID", E."SUCURSAL",
             D."NOMBRE" AS "DEPARTAMENTO_NOMBRE",
             U."NOMBRE" AS "REGISTRADO_POR_NOMBRE"
         FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" E
@@ -1631,14 +1648,27 @@ def get_external_documents():
         ORDER BY E."FECHA_REGISTRO" DESC
         """)
 
-    result = []
-    for row in rows:
-        if not _can_view_external_document(row, viewer, is_quality):
-            continue
-        row["ARCHIVO_DISPONIBLE"] = bool(row.get("ARCHIVO_NOMBRE_ORIGINAL"))
-        result.append(row)
+    visibles = [row for row in rows if _can_view_external_document(row, viewer, is_quality)]
 
-    return ok_response(_serialize_dates_in_place(result))
+    historial = {}
+    if visibles:
+        marcadores = ",".join("?" * len(visibles))
+        for h in fetch_all(
+            f'SELECT "SGCEXTID","FECHA","EDICION" FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS_HIST" '
+            f'WHERE "SGCEXTID" IN ({marcadores}) ORDER BY "FECHA" DESC, "HISTID" DESC',
+            [row["SGCEXTID"] for row in visibles],
+        ):
+            historial.setdefault(h["SGCEXTID"], []).append({"FECHA": h["FECHA"], "EDICION": h["EDICION"]})
+
+    for row in visibles:
+        row["ARCHIVO_DISPONIBLE"] = bool(row.get("ARCHIVO_NOMBRE_ORIGINAL"))
+        if int(row.get("SIN_CADUCIDAD") or 0) == 1:
+            row["ESTADO_VIGENCIA"], row["DIAS_VIGENCIA"] = "SIN_CADUCIDAD", None
+        else:
+            row["ESTADO_VIGENCIA"], row["DIAS_VIGENCIA"] = calcular_estado(row.get("FECHA_VIGENCIA"))
+        row["HISTORIAL"] = historial.get(row["SGCEXTID"], [])
+
+    return ok_response(_serialize_dates_in_place(visibles))
 
 
 @sgc_bp.route("/external-documents", methods=["POST"])
@@ -1647,33 +1677,47 @@ def create_external_document():
     if not valid:
         return response
 
+    # Anyone with access to the SGC registers their external documents; there is no authorization step
+    allowed, response = require_permission("SGC_DOCUMENTOS", "VER")
+    if not allowed:
+        return response
+
     viewer = _get_viewer_context()
-    if not _is_quality(viewer) and not user_has_permission("SGC_DOCUMENTOS", "EDITAR"):
-        return error_response(
-            "No tienes permiso para registrar documentos externos", 403
-        )
-
+    is_quality = _is_quality(viewer)
     form = request.form
+
     titulo = (form.get("TITULO") or "").strip()
-
+    edicion = (form.get("EDICION") or "").strip()
     if not titulo:
-        return error_response("El campo TITULO es requerido", 400)
+        return error_response("Captura el título del documento externo.", 400)
+    if not edicion:
+        return error_response("Captura la edición o versión del documento externo.", 400)
 
-    stored_name, original_name = None, None
+    sin_caducidad, fecha_vigencia, error = _leer_vigencia_externo(form)
+    if error:
+        return error_response(error, 400)
+
+    # The document belongs to the uploader's department; Calidad may register it for another one
+    depaid = form.get("DEPAID") if is_quality and form.get("DEPAID") else (viewer or {}).get("DEPAID")
+    sucursal = (form.get("SUCURSAL") or "").strip() if is_quality and form.get("SUCURSAL") else (viewer or {}).get("SUCURSAL")
+    if not depaid:
+        return error_response("Tu usuario no tiene departamento asignado; pide a Sistemas que lo configure.", 400)
+
     uploaded_file = request.files.get("file")
-    if uploaded_file and uploaded_file.filename:
-        try:
-            stored_name, original_name = _save_uploaded_file(uploaded_file)
-        except ValueError as exc:
-            return error_response(str(exc), 400)
+    if not (uploaded_file and uploaded_file.filename):
+        return error_response("Adjunta el archivo del documento externo.", 400)
+    try:
+        stored_name, original_name = _save_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return error_response(str(exc), 400)
 
     new_id = get_next_id("SGC_DOCUMENTOS_EXTERNOS", "SGCEXTID")
-
     execute_query(
         f"""
         INSERT INTO "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS"
-        ("SGCEXTID","TITULO","ORIGEN","FECHA_RECEPCION","ARCHIVO_URL","ARCHIVO_NOMBRE_ORIGINAL","REGISTRADO_POR","ACTIVO","VISIBILIDAD","DEPAID","SUCURSAL")
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+        ("SGCEXTID","TITULO","ORIGEN","FECHA_RECEPCION","ARCHIVO_URL","ARCHIVO_NOMBRE_ORIGINAL","REGISTRADO_POR",
+         "ACTIVO","VISIBILIDAD","DEPAID","SUCURSAL","EDICION","FECHA_VIGENCIA","SIN_CADUCIDAD")
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'Departamento', ?, ?, ?, ?, ?)
         """,
         [
             new_id,
@@ -1683,13 +1727,90 @@ def create_external_document():
             stored_name,
             original_name,
             current_user_id(),
-            (form.get("VISIBILIDAD") or "Confidencial").strip(),
-            form.get("DEPAID") or None,
-            (form.get("SUCURSAL") or "").strip() or None,
+            depaid,
+            sucursal or None,
+            edicion,
+            fecha_vigencia,
+            sin_caducidad,
+        ],
+    )
+    _registrar_version_externo(new_id, edicion)
+
+    return ok_response({"SGCEXTID": new_id}, "Documento externo registrado", 201)
+
+
+@sgc_bp.route("/external-documents/<int:ext_id>", methods=["PUT"])
+def update_external_document(ext_id):
+    valid, response = validate_active_session()
+    if not valid:
+        return response
+
+    viewer = _get_viewer_context()
+    is_quality = _is_quality(viewer)
+
+    doc = fetch_one(
+        f'SELECT "SGCEXTID","DEPAID","SUCURSAL","EDICION","ARCHIVO_URL" FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?',
+        [ext_id],
+    )
+    if not doc:
+        return error_response("Documento externo no encontrado", 404)
+    if not _can_manage_external_document(doc, viewer, is_quality):
+        return error_response("No tienes permiso para modificar este documento externo", 403)
+
+    form = request.form
+    titulo = (form.get("TITULO") or "").strip()
+    edicion = (form.get("EDICION") or "").strip()
+    if not titulo:
+        return error_response("Captura el título del documento externo.", 400)
+    if not edicion:
+        return error_response("Captura la edición o versión del documento externo.", 400)
+
+    sin_caducidad, fecha_vigencia, error = _leer_vigencia_externo(form)
+    if error:
+        return error_response(error, 400)
+
+    depaid = form.get("DEPAID") if is_quality and form.get("DEPAID") else doc.get("DEPAID")
+    sucursal = (form.get("SUCURSAL") or "").strip() if is_quality and form.get("SUCURSAL") else doc.get("SUCURSAL")
+
+    # External documents are not ours: only the current file is kept, the old one is deleted
+    archivo_url, archivo_nombre = None, None
+    uploaded_file = request.files.get("file")
+    nuevo_archivo = bool(uploaded_file and uploaded_file.filename)
+    if nuevo_archivo:
+        try:
+            archivo_url, archivo_nombre = _save_uploaded_file(uploaded_file)
+        except ValueError as exc:
+            return error_response(str(exc), 400)
+
+    execute_query(
+        f"""
+        UPDATE "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS"
+        SET "TITULO" = ?, "ORIGEN" = ?, "FECHA_RECEPCION" = ?, "EDICION" = ?, "FECHA_VIGENCIA" = ?,
+            "SIN_CADUCIDAD" = ?, "DEPAID" = ?, "SUCURSAL" = ?
+            {', "ARCHIVO_URL" = ?, "ARCHIVO_NOMBRE_ORIGINAL" = ?' if nuevo_archivo else ''}
+        WHERE "SGCEXTID" = ?
+        """,
+        [
+            titulo,
+            (form.get("ORIGEN") or "").strip() or None,
+            _parse_date(form.get("FECHA_RECEPCION")),
+            edicion,
+            fecha_vigencia,
+            sin_caducidad,
+            depaid,
+            sucursal or None,
+            *([archivo_url, archivo_nombre] if nuevo_archivo else []),
+            ext_id,
         ],
     )
 
-    return ok_response({"SGCEXTID": new_id}, "Documento externo registrado", 201)
+    if nuevo_archivo:
+        _borrar_archivo(doc.get("ARCHIVO_URL"))
+    # The history only records when a new version arrives: its date and edition
+    if nuevo_archivo or edicion != (doc.get("EDICION") or ""):
+        _registrar_version_externo(ext_id, edicion)
+
+    return ok_response(message="Documento externo actualizado")
 
 
 @sgc_bp.route("/external-documents/<int:ext_id>/status", methods=["PATCH"])
@@ -1699,21 +1820,22 @@ def update_external_document_status(ext_id):
         return response
 
     viewer = _get_viewer_context()
-    if not _is_quality(viewer) and not user_has_permission("SGC_DOCUMENTOS", "EDITAR"):
-        return error_response(
-            "No tienes permiso para modificar documentos externos", 403
-        )
+    doc = fetch_one(
+        f'SELECT "SGCEXTID","DEPAID" FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?', [ext_id]
+    )
+    if not doc:
+        return error_response("Documento externo no encontrado", 404)
+    if not _can_manage_external_document(doc, viewer, _is_quality(viewer)):
+        return error_response("No tienes permiso para modificar este documento externo", 403)
 
     data = request.get_json(silent=True) or {}
-
     if "ACTIVO" not in data:
         return error_response("El campo ACTIVO es requerido", 400)
 
     execute_query(
         f'UPDATE "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" SET "ACTIVO" = ? WHERE "SGCEXTID" = ?',
-        [data.get("ACTIVO"), ext_id],
+        [1 if data.get("ACTIVO") else 0, ext_id],
     )
-
     return ok_response(message="Estado actualizado")
 
 
@@ -1724,31 +1846,18 @@ def delete_external_document(ext_id):
         return response
 
     viewer = _get_viewer_context()
-    if not _is_quality(viewer) and not user_has_permission("SGC_DOCUMENTOS", "EDITAR"):
-        return error_response(
-            "No tienes permiso para eliminar documentos externos", 403
-        )
-
     existing = fetch_one(
-        f'SELECT "SGCEXTID","ARCHIVO_URL" FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?',
+        f'SELECT "SGCEXTID","DEPAID","ARCHIVO_URL" FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?',
         [ext_id],
     )
     if not existing:
         return error_response("Documento externo no encontrado", 404)
+    if not _can_manage_external_document(existing, viewer, _is_quality(viewer)):
+        return error_response("No tienes permiso para eliminar este documento externo", 403)
 
-    execute_query(
-        f'DELETE FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?',
-        [ext_id],
-    )
-
-    archivo = existing.get("ARCHIVO_URL")
-    if archivo:
-        path = os.path.join(UPLOAD_DIR, archivo)
-        if os.path.exists(path):
-            try:
-                os.remove(path)
-            except OSError:
-                pass
+    execute_query(f'DELETE FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS_HIST" WHERE "SGCEXTID" = ?', [ext_id])
+    execute_query(f'DELETE FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" WHERE "SGCEXTID" = ?', [ext_id])
+    _borrar_archivo(existing.get("ARCHIVO_URL"))
 
     return ok_response(message="Documento externo eliminado")
 
