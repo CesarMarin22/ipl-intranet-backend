@@ -260,15 +260,35 @@ def _can_view_document(doc, viewer, is_quality):
     return False
 
 
-def _can_view_external_document(doc, viewer, is_quality):
-    """External documents are not authorized: Calidad sees all, everyone else only their department's."""
+# Same classifications as the internal documents
+VISIBILIDAD_EXTERNO = {"confidencial": "Confidencial", "interno": "Interno", "publico": "Público"}
+
+
+def _can_manage_external_document(doc, viewer, is_quality):
+    """Edit, new version, activate and delete: Calidad and the department that owns the document."""
     if is_quality:
         return True
     return bool(viewer) and viewer.get("DEPAID") is not None and viewer.get("DEPAID") == doc.get("DEPAID")
 
 
-# Whoever can see an external document can also maintain it (edit, new version, activate, delete)
-_can_manage_external_document = _can_view_external_document
+def _can_view_external_document(doc, viewer, is_quality):
+    """Confidencial: owner department; Interno: the owner's whole branch; Público: everyone. Calidad sees all."""
+    if _can_manage_external_document(doc, viewer, is_quality):
+        return True
+    vis = _visibilidad_normalizada(doc.get("VISIBILIDAD"))
+    if vis == "publico":
+        return True
+    if vis == "interno":
+        return bool(viewer) and bool(viewer.get("SUCURSAL")) and str(viewer.get("SUCURSAL")) == str(doc.get("SUCURSAL") or "")
+    return False
+
+
+def _leer_visibilidad_externo(form):
+    """Returns (visibilidad, error)."""
+    vis = VISIBILIDAD_EXTERNO.get(_visibilidad_normalizada(form.get("VISIBILIDAD") or "Confidencial"))
+    if not vis:
+        return None, "Clasificación inválida: usa Confidencial, Interno o Público."
+    return vis, None
 
 
 def _leer_vigencia_externo(form):
@@ -1639,7 +1659,7 @@ def get_external_documents():
             E."SGCEXTID", E."TITULO", E."ORIGEN", E."FECHA_RECEPCION", E."EDICION",
             E."FECHA_VIGENCIA", E."SIN_CADUCIDAD",
             E."ARCHIVO_NOMBRE_ORIGINAL", E."ACTIVO", E."FECHA_REGISTRO",
-            E."DEPAID", E."SUCURSAL",
+            E."DEPAID", E."SUCURSAL", E."VISIBILIDAD",
             D."NOMBRE" AS "DEPARTAMENTO_NOMBRE",
             U."NOMBRE" AS "REGISTRADO_POR_NOMBRE"
         FROM "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS" E
@@ -1662,6 +1682,7 @@ def get_external_documents():
 
     for row in visibles:
         row["ARCHIVO_DISPONIBLE"] = bool(row.get("ARCHIVO_NOMBRE_ORIGINAL"))
+        row["PUEDE_EDITAR"] = _can_manage_external_document(row, viewer, is_quality)
         if int(row.get("SIN_CADUCIDAD") or 0) == 1:
             row["ESTADO_VIGENCIA"], row["DIAS_VIGENCIA"] = "SIN_CADUCIDAD", None
         else:
@@ -1696,6 +1717,9 @@ def create_external_document():
     sin_caducidad, fecha_vigencia, error = _leer_vigencia_externo(form)
     if error:
         return error_response(error, 400)
+    visibilidad, error = _leer_visibilidad_externo(form)
+    if error:
+        return error_response(error, 400)
 
     # The document belongs to the uploader's department; Calidad may register it for another one
     depaid = form.get("DEPAID") if is_quality and form.get("DEPAID") else (viewer or {}).get("DEPAID")
@@ -1717,7 +1741,7 @@ def create_external_document():
         INSERT INTO "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS"
         ("SGCEXTID","TITULO","ORIGEN","FECHA_RECEPCION","ARCHIVO_URL","ARCHIVO_NOMBRE_ORIGINAL","REGISTRADO_POR",
          "ACTIVO","VISIBILIDAD","DEPAID","SUCURSAL","EDICION","FECHA_VIGENCIA","SIN_CADUCIDAD")
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'Departamento', ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
         """,
         [
             new_id,
@@ -1727,6 +1751,7 @@ def create_external_document():
             stored_name,
             original_name,
             current_user_id(),
+            visibilidad,
             depaid,
             sucursal or None,
             edicion,
@@ -1768,6 +1793,9 @@ def update_external_document(ext_id):
     sin_caducidad, fecha_vigencia, error = _leer_vigencia_externo(form)
     if error:
         return error_response(error, 400)
+    visibilidad, error = _leer_visibilidad_externo(form)
+    if error:
+        return error_response(error, 400)
 
     depaid = form.get("DEPAID") if is_quality and form.get("DEPAID") else doc.get("DEPAID")
     sucursal = (form.get("SUCURSAL") or "").strip() if is_quality and form.get("SUCURSAL") else doc.get("SUCURSAL")
@@ -1786,7 +1814,7 @@ def update_external_document(ext_id):
         f"""
         UPDATE "{SCHEMA}"."SGC_DOCUMENTOS_EXTERNOS"
         SET "TITULO" = ?, "ORIGEN" = ?, "FECHA_RECEPCION" = ?, "EDICION" = ?, "FECHA_VIGENCIA" = ?,
-            "SIN_CADUCIDAD" = ?, "DEPAID" = ?, "SUCURSAL" = ?
+            "SIN_CADUCIDAD" = ?, "DEPAID" = ?, "SUCURSAL" = ?, "VISIBILIDAD" = ?
             {', "ARCHIVO_URL" = ?, "ARCHIVO_NOMBRE_ORIGINAL" = ?' if nuevo_archivo else ''}
         WHERE "SGCEXTID" = ?
         """,
@@ -1799,6 +1827,7 @@ def update_external_document(ext_id):
             sin_caducidad,
             depaid,
             sucursal or None,
+            visibilidad,
             *([archivo_url, archivo_nombre] if nuevo_archivo else []),
             ext_id,
         ],
