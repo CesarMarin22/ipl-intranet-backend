@@ -21,6 +21,7 @@ from app.routes.branches import branches_bp
 from app.routes.qr import qr_bp
 from app.routes.ordenes_trabajo import ordenes_trabajo_bp
 from app.routes.catalog import catalog_bp
+from app.routes.reloj import reloj_bp
 
 
 def _configure_logging(app):
@@ -81,6 +82,7 @@ def create_app():
     app.register_blueprint(qr_bp, url_prefix="/api/qr")
     app.register_blueprint(ordenes_trabajo_bp, url_prefix="/api/ordenes-trabajo")
     app.register_blueprint(catalog_bp, url_prefix="/api/catalog")
+    app.register_blueprint(reloj_bp, url_prefix="/api/reloj")
 
     @app.errorhandler(Exception)
     def handle_unhandled_exception(exc):
